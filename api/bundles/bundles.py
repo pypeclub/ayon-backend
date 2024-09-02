@@ -17,7 +17,7 @@ from ayon_server.lib.postgres import Connection, Postgres
 from ayon_server.types import Field, OPModel, Platform
 
 from .actions import promote_bundle
-from .check_bundle import CheckBundleResponseModel, check_bundle
+from .check_bundle import CheckBundleResponseModel, check_bundle, get_system_addons
 from .migration import migrate_settings
 from .models import AddonDevelopmentItem, BundleModel, BundlePatchModel, ListBundleModel
 from .router import router
@@ -162,19 +162,22 @@ async def create_new_bundle(
     if not user.is_admin:
         raise ForbiddenException("Only admins can create bundles")
 
+    system_addons = await get_system_addons()
+    for system_addon_name in system_addons:
+        if not bundle.addons.get(system_addon_name):
+            addon_definition = AddonLibrary.get(system_addon_name)
+            if not addon_definition:
+                continue  # this should not happen
+            logging.debug(
+                f"Adding system addon {system_addon_name} to bundle {bundle.name}"
+            )
+            if addon_definition.latest:
+                bundle.addons[system_addon_name] = addon_definition.latest.version
+
     if not force:
         res = await check_bundle(bundle)
         if not res.success:
             raise BadRequestException(res.message())
-
-    for system_addon_name, addon_definition in AddonLibrary.items():
-        if addon_definition.is_system:
-            if system_addon_name not in bundle.addons:
-                logging.debug(
-                    f"Adding system addon {system_addon_name} to bundle {bundle.name}"
-                )
-                if addon_definition.latest:
-                    bundle.addons[system_addon_name] = addon_definition.latest.version
 
     async with Postgres.acquire() as conn, conn.transaction():
         await _create_new_bundle(conn, bundle, user, x_sender)
@@ -295,9 +298,12 @@ async def update_bundle(
         # Validate the bundle
 
         if not force:
+            logging.debug(f"Checking bundle {bundle.name}")
             bstat = await check_bundle(bundle)
             if not bstat.success:
                 raise BadRequestException(bstat.message())
+        else:
+            logging.debug(f"Forcing bundle {bundle.name}")
 
         # Construct the new data
 

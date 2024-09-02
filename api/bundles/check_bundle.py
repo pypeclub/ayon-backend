@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING, Literal
 
+import aiocache
 import semver
 
 from ayon_server.addons.library import AddonLibrary
@@ -47,6 +48,15 @@ async def get_active_services() -> list[dict[str, str]]:
     return []
 
 
+@aiocache.cached()
+async def get_system_addons() -> list[str]:
+    result = []
+    for system_addon_name, addon_definition in AddonLibrary.items():
+        if addon_definition.is_system:
+            result.append(system_addon_name)
+    return result
+
+
 async def check_bundle(
     bundle: BundleModel | BundlePatchModel,
 ) -> CheckBundleResponseModel:
@@ -54,6 +64,17 @@ async def check_bundle(
 
     if bundle.addons is None:
         return CheckBundleResponseModel(success=True)
+
+    for system_addon_name in await get_system_addons():
+        if not bundle.addons.get(system_addon_name):
+            issues.append(
+                BundleIssueModel(
+                    severity="error",
+                    addon=system_addon_name,
+                    message="System addon must be included in the bundle",
+                    required_addon=None,
+                )
+            )
 
     for addon_name, addon_version in bundle.addons.items():
         if addon_version is None:
