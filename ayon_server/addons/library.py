@@ -1,3 +1,4 @@
+import inspect
 import os
 from typing import Any, ItemsView, Optional
 
@@ -10,6 +11,10 @@ from ayon_server.config import ayonconfig
 # from ayon_server.addons.utils import classes_from_module, import_module
 from ayon_server.exceptions import NotFoundException
 from ayon_server.lib.postgres import Postgres
+
+
+class InitializationError(Exception):
+    pass
 
 
 class AddonLibrary:
@@ -53,7 +58,66 @@ class AddonLibrary:
             if definition.restart_requested:
                 self.restart_requested = True
 
-    def get_addons_dir(self) -> str | None:
+    @classmethod
+    async def hot_load(
+        cls, addon_name: str, addon_version: str, addon_dir: str
+    ) -> None:
+        elms = addon_dir.split("/")
+        if len(elms) != 2:
+            raise ValueError(
+                f"Invalid addon directory: {addon_dir} (must be addon_name/version)"
+            )
+
+        addon_root = cls.get_addons_dir()
+        if addon_root is None:
+            logging.error(f"Addons root directory does not exist: {addon_root}")
+            return
+        full_addon_dir = os.path.join(addon_root, addon_dir)
+        if not os.path.isdir(full_addon_dir):
+            logging.error(f"Addon directory does not exist: {full_addon_dir}")
+            return
+
+        try:
+            addon = cls.addon(addon_name, addon_version)
+            logging.info(f"HotLoad: {addon} already loaded")
+            return
+        except NotFoundException:
+            pass
+
+        print("HotLoad", addon_name, addon_version, full_addon_dir)
+
+        instance = cls.getinstance()
+        try:
+            if addon_name in instance.data:
+                definition = instance[addon_name]
+                if not definition.init_version(full_addon_dir):
+                    raise InitializationError
+            else:
+                instance.data[addon_name] = ServerAddonDefinition(
+                    instance, full_addon_dir, force=True
+                )
+                if not instance.data[addon_name].versions:
+                    raise InitializationError
+        except InitializationError:
+            logging.error(f"Failed to initialize {full_addon_dir}")
+            instance.broken_addons[(addon_name, addon_version)] = {
+                "reason": "Failed to initialize"
+            }
+
+        addon = cls.addon(addon_name, addon_version)
+        if inspect.iscoroutinefunction(addon.pre_setup):
+            await addon.pre_setup()
+        else:
+            addon.pre_setup()
+
+        if inspect.iscoroutinefunction(addon.setup):
+            await addon.setup()
+        else:
+            addon.setup()
+        logging.info(f"HotLoad: {addon} loaded")
+
+    @staticmethod
+    def get_addons_dir() -> str | None:
         for d in [ayonconfig.addons_dir, "addons"]:
             if not os.path.isdir(d):
                 continue
@@ -84,7 +148,7 @@ class AddonLibrary:
         instance = cls.getinstance()
         return instance.data.get(key, default)
 
-    def __getitem__(self, key) -> ServerAddonDefinition:
+    def __getitem__(self, key: str) -> ServerAddonDefinition:
         return self.data[key]
 
     def __contains__(self, key) -> bool:

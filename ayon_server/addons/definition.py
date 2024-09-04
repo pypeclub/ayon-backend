@@ -16,10 +16,11 @@ class ServerAddonDefinition:
     title: str | None = None
     app_host_name: str | None = None
 
-    def __init__(self, library: "AddonLibrary", addon_dir: str):
+    def __init__(self, library: "AddonLibrary", addon_dir: str, force: bool = False):
         self.library = library
         self.addon_dir = addon_dir
         self.restart_requested = False
+        self.force = force
         self._versions: dict[str, BaseServerAddon] | None = None
 
         if not self.versions:
@@ -60,6 +61,23 @@ class ServerAddonDefinition:
                 return self.name.capitalize()
         return f"[{self.dir_name.capitalize()}]"
 
+    def init_version(self, version_dir: str) -> bool:
+        try:
+            if os.path.exists(os.path.join(version_dir, "__init__.py")):
+                self.init_legacy_addon(version_dir)
+                return True
+
+            for filename in ["package.py", "package.yml", "package.yaml"]:
+                if os.path.exists(os.path.join(version_dir, filename)):
+                    self.init_addon(version_dir)
+                    return True
+
+        except AssertionError as e:
+            logging.error(f"Failed to initialize addon {version_dir}: {e}")
+        except Exception:
+            log_traceback(f"Failed to initialize addon {version_dir}")
+        return False
+
     @property
     def versions(self) -> dict[str, BaseServerAddon]:
         """Return a list of addon versions.
@@ -72,23 +90,14 @@ class ServerAddonDefinition:
         if self._versions is None:
             self._versions = {}
             for version_name in os.listdir(self.addon_dir):
+                if version_name[0] in [".", "_"] and not self.force:
+                    # we ignore hidden directories (such as .git)
+                    # and _disabled directories
+                    continue
+
                 version_dir = os.path.join(self.addon_dir, version_name)
-
-                try:
-                    if os.path.exists(os.path.join(version_dir, "__init__.py")):
-                        self.init_legacy_addon(version_dir)
-                        continue
-
-                    for filename in ["package.py", "package.yml", "package.yaml"]:
-                        if os.path.exists(os.path.join(version_dir, filename)):
-                            self.init_addon(version_dir)
-                            break
-
-                except AssertionError as e:
-                    logging.error(f"Failed to initialize addon {version_dir}: {e}")
-                except Exception:
-                    log_traceback(f"Failed to initialize addon {version_dir}")
-
+                self.init_version(version_dir)
+                # TODO: do we want to handle broken addons here?
         return self._versions
 
     def init_addon(self, addon_dir: str):

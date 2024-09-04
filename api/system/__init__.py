@@ -1,3 +1,5 @@
+__all__ = ["info", "metrics", "secrets", "sites", "utils"]
+
 from fastapi import Response
 from nxtools import logging
 
@@ -8,13 +10,8 @@ from ayon_server.exceptions import ForbiddenException
 from ayon_server.lib.postgres import Postgres
 from ayon_server.types import Field, OPModel
 
-from . import info, metrics, secrets, sites
+from . import info, metrics, secrets, sites, utils
 from .router import router
-
-assert info
-assert metrics
-assert secrets
-assert sites
 
 
 @router.post("/system/restart", response_class=Response, tags=["System"])
