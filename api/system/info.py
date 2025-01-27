@@ -1,4 +1,5 @@
 import contextlib
+import datetime
 from typing import Any
 from urllib.parse import urlparse
 
@@ -154,15 +155,20 @@ async def get_user_sites(
 
     # Get all sites the user is registered to or the current site
     query = """
-        SELECT id, data FROM sites
+        SELECT id, last_seen, data FROM sites
         WHERE id = $1 OR data->'users' ? $2
     """
 
     async for row in Postgres.iterate(query, query_id, user_name):
-        site = SiteInfo(id=row["id"], **row["data"])
+        data = row["data"]
+        data.pop("last_seen", None)
+        site = SiteInfo(id=row["id"], last_seen=row["last_seen"], **data)
         if current_site and site.id == current_site.id:
             # record matches the current site
             current_site_exists = True
+            now = datetime.datetime.now()
+            now = now.replace(tzinfo=datetime.timezone.utc)
+
             if user_name not in site.users:
                 current_site.users.update(site.users)
                 current_needs_update = True
@@ -172,6 +178,10 @@ async def get_user_sites(
             elif site.hostname != current_site.hostname:
                 current_needs_update = True
             elif site.version != current_site.version:
+                current_needs_update = True
+            elif (not site.last_seen) or (
+                site.last_seen < now - datetime.timedelta(days=1)
+            ):
                 current_needs_update = True
             # do not add the current site to the list,
             # we'll insert it at the beginning at the end of the loop
@@ -184,12 +194,15 @@ async def get_user_sites(
         if current_needs_update or not current_site_exists:
             logging.debug(f"Registering to site {current_site.id}", user=user_name)
             mdata = current_site.dict()
+            mdata.pop("last_seen", None)
             mid = mdata.pop("id")
             await Postgres.execute(
                 """
                 INSERT INTO sites (id, data)
                 VALUES ($1, $2) ON CONFLICT (id)
-                DO UPDATE SET data = EXCLUDED.data
+                DO UPDATE SET
+                    data = EXCLUDED.data,
+                    last_seen = now()
                 """,
                 mid,
                 mdata,
@@ -237,6 +250,7 @@ async def get_additional_info(user: UserEntity, request: Request):
 
     current_site: SiteInfo | None = None
     with contextlib.suppress(ValidationError):
+        print("Headers", request.headers)
         current_site = SiteInfo(
             id=request.headers.get("x-ayon-site-id"),
             platform=request.headers.get("x-ayon-platform"),
@@ -244,6 +258,7 @@ async def get_additional_info(user: UserEntity, request: Request):
             version=request.headers.get("x-ayon-version"),
             users=[user.name],
         )
+        print("Got site info", current_site)
 
     sites = await get_user_sites(user.name, current_site)
 

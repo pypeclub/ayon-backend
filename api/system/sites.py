@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import Query
 
 from ayon_server.api.dependencies import CurrentUser
@@ -13,6 +15,7 @@ class SiteInfo(OPModel):
     hostname: str = Field(..., title="Machine hostname")
     version: str = Field(..., title="Ayon version")
     users: set[str] = Field(..., title="List of users")
+    last_seen: datetime | None = Field(None, title="Last used timestamp")
 
 
 @router.get("/system/sites", tags=["System"])
@@ -24,9 +27,9 @@ async def get_sites(
     """Get list of sites"""
 
     result: list[SiteInfo] = []
-    query = "SELECT id, data FROM sites"
+    query = "SELECT id, data, last_seen FROM sites"
     async for row in Postgres.iterate(query):
-        site = SiteInfo(id=row["id"], **row["data"])
+        site = SiteInfo(id=row["id"], last_seen=row["last_seen"], **row["data"])
 
         if platform and site.platform != platform:
             continue
