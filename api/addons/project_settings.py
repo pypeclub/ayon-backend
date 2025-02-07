@@ -8,9 +8,7 @@ from pydantic.error_wrappers import ValidationError
 from ayon_server.addons import AddonLibrary
 from ayon_server.api.dependencies import CurrentUser, ProjectName, SiteID
 from ayon_server.api.responses import EmptyResponse
-from ayon_server.config import ayonconfig
 from ayon_server.entities import ProjectEntity
-from ayon_server.events import EventStream
 from ayon_server.exceptions import (
     BadRequestException,
     ForbiddenException,
@@ -20,6 +18,7 @@ from ayon_server.lib.postgres import Postgres
 from ayon_server.settings import BaseSettingsModel
 from ayon_server.settings.overrides import extract_overrides, list_overrides
 from ayon_server.settings.postprocess import postprocess_settings_schema
+from ayon_server.settings.set_addon_settings import set_addon_settings
 
 from .common import (
     ModifyOverridesRequestModel,
@@ -162,7 +161,9 @@ async def get_addon_project_overrides(
 
 
 @router.post(
-    "/{addon_name}/{version}/settings/{project_name}", status_code=204, **route_meta
+    "/{addon_name}/{version}/settings/{project_name}",
+    status_code=204,
+    **route_meta,
 )
 async def set_addon_project_settings(
     payload: dict[str, Any],
@@ -207,50 +208,13 @@ async def set_addon_project_settings(
         except ValidationError as e:
             raise BadRequestException("Invalid settings", errors=e.errors()) from e
 
-        await Postgres.execute(
-            f"""
-            INSERT INTO project_{project_name}.settings
-            (addon_name, addon_version, variant, data)
-            VALUES ($1, $2, $3, $4)
-            ON CONFLICT (addon_name, addon_version, variant) DO UPDATE
-            SET data = $4
-            """,
-            addon_name,
-            version,
-            variant,
-            data,
+        await set_addon_settings(
+            addon_name=addon_name,
+            addon_version=version,
+            project_name=project_name,
+            variant=variant,
+            data=data,
         )
-
-        if ayonconfig.audit_trail:
-            payload = {
-                "originalValue": existing,
-                "newValue": data,
-            }
-        else:
-            payload = {}
-
-        new_settings = await addon.get_project_settings(project_name, variant=variant)
-        if new_settings:
-            await addon.on_settings_changed(
-                old_settings=original,
-                new_settings=new_settings,
-                project_name=project_name,
-                variant=variant,
-            )
-
-        await EventStream.dispatch(
-            topic="settings.changed",
-            description=f"{addon_name} {version} {variant} project overrides changed",
-            summary={
-                "addon_name": addon_name,
-                "addon_version": version,
-                "variant": variant,
-            },
-            user=user.name,
-            project=project_name,
-            payload=payload,
-        )
-
         return EmptyResponse()
 
     # site settings
@@ -272,41 +236,23 @@ async def set_addon_project_settings(
     except ValidationError:
         raise BadRequestException("Invalid settings") from None
 
-    await Postgres.execute(
-        f"""
-        INSERT INTO project_{project_name}.project_site_settings
-        (addon_name, addon_version, site_id, user_name, data)
-        VALUES ($1, $2, $3, $4, $5)
-        ON CONFLICT (addon_name, addon_version, site_id, user_name)
-        DO UPDATE SET data = $5
-        """,
-        addon_name,
-        version,
-        site_id,
-        user.name,
-        data,
+    await set_addon_settings(
+        addon_name=addon_name,
+        addon_version=version,
+        project_name=project_name,
+        variant=variant,
+        site_id=site_id,
+        user_name=user.name,
+        data=data,
     )
-
-    new_settings = await addon.get_project_site_settings(
-        project_name, user.name, site_id, variant=variant
-    )
-    if new_settings:
-        await addon.on_settings_changed(
-            old_settings=original,
-            new_settings=new_settings,
-            project_name=project_name,
-            variant=variant,
-            site_id=site_id,
-            user_name=user.name,
-        )
-
-    # TODO: Audit trail / events
 
     return EmptyResponse()
 
 
 @router.delete(
-    "/{addon_name}/{version}/overrides/{project_name}", status_code=204, **route_meta
+    "/{addon_name}/{version}/overrides/{project_name}",
+    status_code=204,
+    **route_meta,
 )
 async def delete_addon_project_overrides(
     addon_name: str,
@@ -316,8 +262,6 @@ async def delete_addon_project_overrides(
     site_id: SiteID,
     variant: str = Query("production"),
 ):
-    # Ensure the addon and the project exist
-    addon = AddonLibrary.addon(addon_name, version)
     _ = await ProjectEntity.load(project_name)
 
     if not site_id:
@@ -327,95 +271,34 @@ async def delete_addon_project_overrides(
             write=True,
         )
 
-        old_settings = await addon.get_project_settings(project_name, variant=variant)
-        new_settings = await addon.get_studio_settings(variant=variant)
-
-        res = await Postgres.fetch(
-            f"""
-            DELETE FROM project_{project_name}.settings
-            WHERE addon_name = $1
-            AND addon_version = $2
-            AND variant = $3
-            RETURNING data
-            """,
-            addon_name,
-            version,
-            variant,
+        await set_addon_settings(
+            addon_name=addon_name,
+            addon_version=version,
+            project_name=project_name,
+            variant=variant,
+            data=None,
         )
-
-        if res:
-            old_overrides = res[0]["data"]
-        else:
-            old_overrides = {}
-
-        if new_settings and old_settings:
-            await addon.on_settings_changed(
-                old_settings=old_settings,
-                new_settings=new_settings,
-                project_name=project_name,
-                variant=variant,
-            )
-
-        payload = {}
-        if ayonconfig.audit_trail:
-            payload = {
-                "originalValue": old_overrides,
-                "newValue": {},
-            }
-
-        await EventStream.dispatch(
-            topic="settings.changed",
-            description=f"{addon_name} {version} {variant} project overrides removed",
-            summary={
-                "addon_name": addon_name,
-                "addon_version": version,
-                "variant": variant,
-            },
-            payload=payload,
-            user=user.name,
-            project=project_name,
-        )
-
         return EmptyResponse()
 
     # site settings
 
-    await Postgres.execute(
-        f"""
-        DELETE FROM project_{project_name}.project_site_settings
-        WHERE addon_name = $1
-        AND addon_version = $2
-        AND site_id = $3
-        AND user_name = $4
-        """,
-        addon_name,
-        version,
-        site_id,
-        user.name,
+    await set_addon_settings(
+        addon_name=addon_name,
+        addon_version=version,
+        project_name=project_name,
+        variant=variant,
+        site_id=site_id,
+        user_name=user.name,
+        data=None,
     )
-
-    old_settings = await addon.get_project_site_settings(
-        project_name, user.name, site_id, variant=variant
-    )
-    new_settings = await addon.get_project_settings(project_name, variant=variant)
-
-    if new_settings and old_settings:
-        await addon.on_settings_changed(
-            old_settings=old_settings,
-            new_settings=new_settings,
-            project_name=project_name,
-            variant=variant,
-            site_id=site_id,
-            user_name=user.name,
-        )
-
-    # TODO: Audit trail / events
 
     return EmptyResponse()
 
 
 @router.post(
-    "/{addon_name}/{version}/overrides/{project_name}", status_code=204, **route_meta
+    "/{addon_name}/{version}/overrides/{project_name}",
+    status_code=204,
+    **route_meta,
 )
 async def modify_project_overrides(
     payload: ModifyOverridesRequestModel,
@@ -426,15 +309,9 @@ async def modify_project_overrides(
     site_id: SiteID,
     variant: str = Query("production"),
 ):
-    addon = AddonLibrary.addon(addon_name, version)
-    if not addon:
-        raise NotFoundException(f"Addon {addon_name} {version} not found")
+    # Project site settings
 
     if site_id:
-        old_settings = await addon.get_project_site_settings(
-            project_name, user.name, site_id, variant=variant
-        )
-
         if payload.action == "delete":
             await remove_site_override(
                 addon_name,
@@ -455,36 +332,15 @@ async def modify_project_overrides(
                 payload.path,
             )
 
-        new_settings = await addon.get_project_site_settings(
-            project_name, user.name, site_id, variant=variant
-        )
-
-        if new_settings and old_settings:
-            await addon.on_settings_changed(
-                old_settings=old_settings,
-                new_settings=new_settings,
-                project_name=project_name,
-                variant=variant,
-                site_id=site_id,
-                user_name=user.name,
-            )
-
         return EmptyResponse()
+
+    # Project settings
 
     user.check_permissions(
         "project.settings",
         project_name=project_name,
         write=True,
     )
-
-    old_settings = await addon.get_project_settings(project_name, variant=variant)
-    if ayonconfig.audit_trail:
-        old_overrides = await addon.get_project_overrides(
-            project_name,
-            variant=variant,
-        )
-    else:
-        old_overrides = {}
 
     if payload.action == "delete":
         await remove_override(
@@ -503,41 +359,12 @@ async def modify_project_overrides(
             variant=variant,
         )
 
-    new_settings = await addon.get_project_settings(project_name, variant=variant)
-
-    if new_settings and old_settings:
-        await addon.on_settings_changed(
-            old_settings=old_settings,
-            new_settings=new_settings,
-            project_name=project_name,
-            variant=variant,
-        )
-
-    event_payload = {}
-    if ayonconfig.audit_trail:
-        new_overrides = await addon.get_project_overrides(
-            project_name,
-            variant=variant,
-        )
-        event_payload = {
-            "originalValue": old_overrides,
-            "newValue": new_overrides,
-        }
-
-    await EventStream.dispatch(
-        topic="settings.changed",
-        description=f"{addon_name} {version} {variant} project overrides changed",
-        summary={
-            "addon_name": addon_name,
-            "addon_version": version,
-            "variant": variant,
-        },
-        user=user.name,
-        project=project_name,
-        payload=event_payload,
-    )
-
     return EmptyResponse()
+
+
+#
+# Raw overrides. No validation or processing is done on these.
+#
 
 
 @router.get("/{addon_name}/{addon_version}/rawOverrides/{project_name}", **route_meta)
