@@ -138,7 +138,7 @@ class Templates(BaseSettingsModel):
             HeroTemplate(
                 name="default",
                 directory="{root[work]}/{project[name]}/{hierarchy}/{folder[name]}/publish/{product[type]}/{product[name]}/hero",  # noqa: E501
-                file="{project[code]}_{folder[name]}_{task[name]}_hero<_{comment}>.{ext}",  # noqa: E501
+                file="{project[code]}_{folder[name]}_{product[name]}_hero<_{output}><.{@frame}><_{udim}>.{ext}",  # noqa: E501
             )
         ],
     )
