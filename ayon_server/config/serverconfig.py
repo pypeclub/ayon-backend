@@ -1,18 +1,20 @@
 from typing import Any
 
+from pydantic import validator
+
 from ayon_server.lib.postgres import Postgres
 from ayon_server.lib.redis import Redis
 from ayon_server.settings import BaseSettingsModel, SettingsField
 
 
 class CustomizationModel(BaseSettingsModel):
-    login_background: str | None = SettingsField(
-        None,
+    login_background: str = SettingsField(
+        "",
         title="Login Background",
         disabled=True,
     )
-    studio_logo: str | None = SettingsField(
-        None,
+    studio_logo: str = SettingsField(
+        "",
         title="Studio Logo",
         disabled=True,
     )
@@ -26,6 +28,12 @@ class CustomizationModel(BaseSettingsModel):
         example="Welcome to Ayon!",
         widget="textarea",
     )
+
+    @validator("login_background", "studio_logo", pre=True)
+    def validate_image_url(cls, value: str) -> str:
+        if not value:
+            return ""
+        return value
 
 
 class ServerConfigModel(BaseSettingsModel):
@@ -46,7 +54,6 @@ class ServerConfigModel(BaseSettingsModel):
 
 def migrate_server_config(config_dict: dict[str, Any]) -> dict[str, Any]:
     """Migrate the server configuration from the old format to the new format."""
-
     return config_dict
 
 
