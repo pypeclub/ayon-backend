@@ -4,8 +4,6 @@ import re
 from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING, Any, Optional
 
-from nxtools import logging
-
 from ayon_server.access.access_groups import AccessGroups
 from ayon_server.access.permissions import Permissions
 from ayon_server.auth.utils import (
@@ -28,6 +26,7 @@ from ayon_server.lib.postgres import Connection, Postgres
 from ayon_server.lib.redis import Redis
 from ayon_server.types import AccessType
 from ayon_server.utils import SQLTool, dict_exclude
+from nxtools import logging
 
 if TYPE_CHECKING:
     from ayon_server.api.clientinfo import ClientInfo

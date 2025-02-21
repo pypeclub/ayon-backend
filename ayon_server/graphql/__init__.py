@@ -4,7 +4,6 @@ from typing import Any
 
 import strawberry
 from graphql import GraphQLError
-from nxtools import logging
 from strawberry.dataloader import DataLoader
 from strawberry.fastapi import GraphQLRouter
 from strawberry.types import ExecutionContext
@@ -45,6 +44,7 @@ from ayon_server.graphql.resolvers.projects import get_project, get_projects
 from ayon_server.graphql.resolvers.users import get_user, get_users
 from ayon_server.graphql.types import Info
 from ayon_server.lib.postgres import Postgres
+from nxtools import logging
 
 
 async def graphql_get_context(user: CurrentUser) -> dict[str, Any]:

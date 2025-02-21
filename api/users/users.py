@@ -1,7 +1,6 @@
 from typing import Any
 
 from fastapi import Path
-from nxtools import logging
 
 from ayon_server.api.clientinfo import ClientInfo
 from ayon_server.api.dependencies import (
@@ -27,6 +26,7 @@ from ayon_server.helpers.rename_user import rename_user
 from ayon_server.lib.redis import Redis
 from ayon_server.types import USER_NAME_REGEX, Field, OPModel
 from ayon_server.utils import get_nickname, obscure
+from nxtools import logging
 
 from .avatar import REDIS_NS, obtain_avatar
 from .router import router

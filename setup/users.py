@@ -1,9 +1,8 @@
 from typing import Any
 
-from nxtools import logging
-
 from ayon_server.auth.utils import create_password, hash_password
 from ayon_server.lib.postgres import Postgres
+from nxtools import logging
 
 
 async def deploy_users(

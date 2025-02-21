@@ -5,7 +5,6 @@ import os
 import aiofiles
 import httpx
 from fastapi import Request, Response
-from nxtools import logging
 
 from ayon_server.api.dependencies import CurrentUser, UserName
 from ayon_server.api.files import image_response_from_bytes
@@ -14,6 +13,7 @@ from ayon_server.exceptions import NotFoundException
 from ayon_server.helpers.thumbnails import process_thumbnail
 from ayon_server.lib.postgres import Postgres
 from ayon_server.lib.redis import Redis
+from nxtools import logging
 
 from .router import router
 

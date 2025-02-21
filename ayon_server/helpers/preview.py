@@ -3,7 +3,6 @@ import os
 
 import aiofiles
 from fastapi import Response
-from nxtools import logging
 
 from ayon_server.api.files import image_response_from_bytes
 from ayon_server.exceptions import (
@@ -15,6 +14,7 @@ from ayon_server.files import Storages
 from ayon_server.helpers.mimetypes import is_image_mime_type, is_video_mime_type
 from ayon_server.lib.postgres import Postgres
 from ayon_server.lib.redis import Redis
+from nxtools import logging
 
 REDIS_NS = "project.file_preview"
 FILE_PREVIEW_SIZE = (600, None)

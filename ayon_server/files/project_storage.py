@@ -8,7 +8,6 @@ import aioshutil
 import httpx
 from fastapi import Request
 from fastapi.responses import RedirectResponse
-from nxtools import log_traceback, logging
 from typing_extensions import AsyncGenerator
 
 from ayon_server.api.files import handle_upload
@@ -31,6 +30,7 @@ from ayon_server.helpers.ffprobe import extract_media_info
 from ayon_server.helpers.project_list import ProjectListItem, get_project_info
 from ayon_server.lib.postgres import Postgres
 from ayon_server.models.file_info import FileInfo
+from nxtools import log_traceback, logging
 
 from .common import FileGroup, StorageType
 from .utils import list_local_files

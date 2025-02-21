@@ -11,7 +11,6 @@ import semver
 from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
 from fastapi.websockets import WebSocket, WebSocketDisconnect
-from nxtools import log_to_file, log_traceback, logging, slugify
 
 # okay. now the rest
 from ayon_server.addons import AddonLibrary
@@ -36,6 +35,7 @@ from ayon_server.initialize import ayon_init
 from ayon_server.lib.postgres import Postgres
 from ayon_server.utils import parse_access_token
 from maintenance.scheduler import MaintenanceScheduler
+from nxtools import log_to_file, log_traceback, logging, slugify
 
 # We just need the log collector to be initialized.
 _ = log_collector

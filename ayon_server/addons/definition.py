@@ -3,10 +3,10 @@ from typing import TYPE_CHECKING
 
 import semver
 import yaml
-from nxtools import log_traceback, logging, slugify
 
 from ayon_server.addons.addon import METADATA_KEYS, BaseServerAddon
 from ayon_server.helpers.modules import classes_from_module, import_module
+from nxtools import log_traceback, logging, slugify
 
 if TYPE_CHECKING:
     from ayon_server.addons.library import AddonLibrary

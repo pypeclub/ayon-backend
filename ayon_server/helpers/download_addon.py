@@ -1,12 +1,11 @@
 import hashlib
 
-from nxtools import logging
-
 from ayon_server.constraints import Constraints
 from ayon_server.events import EventStream
 from ayon_server.exceptions import ForbiddenException
 from ayon_server.installer import background_installer
 from ayon_server.lib.postgres import Postgres
+from nxtools import logging
 
 
 async def download_addon(

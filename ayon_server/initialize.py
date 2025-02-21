@@ -1,7 +1,6 @@
 import asyncio
 
 import asyncpg
-from nxtools import logging
 
 from ayon_server.activities import ActivityFeedEventHook
 from ayon_server.events.eventstream import EventStream
@@ -9,6 +8,7 @@ from ayon_server.extensions import init_extensions
 from ayon_server.helpers.project_list import build_project_list
 from ayon_server.lib.postgres import Postgres
 from ayon_server.lib.redis import Redis
+from nxtools import logging
 
 
 async def ayon_init(extensions: bool = True):

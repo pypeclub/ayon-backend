@@ -1,13 +1,12 @@
 from typing import Literal
 
-from nxtools import log_traceback
-
 from ayon_server.addons import AddonLibrary
 from ayon_server.exceptions import NotFoundException
 from ayon_server.settings import BaseSettingsModel
 from ayon_server.settings.set_addon_settings import set_addon_settings
 from ayon_server.types import Field, OPModel
 from ayon_server.utils import dict_remove_path
+from nxtools import log_traceback
 
 
 class ModifyOverridesRequestModel(OPModel):

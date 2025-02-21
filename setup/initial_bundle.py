@@ -1,10 +1,9 @@
 from typing import Any
 
-from nxtools import logging
-
 from ayon_server.events import EventStream
 from ayon_server.installer.addons import install_addon_from_url
 from ayon_server.lib.postgres import Postgres
+from nxtools import logging
 
 
 async def create_initial_bundle(bundle_data: dict[str, Any]):

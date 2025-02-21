@@ -2,8 +2,9 @@ import copy
 from datetime import datetime
 from typing import Any
 
-from nxtools import logging
 from pydantic import BaseModel
+
+from nxtools import logging
 
 
 def apply_patch(original: BaseModel, patch: BaseModel) -> BaseModel:

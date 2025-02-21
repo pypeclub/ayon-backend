@@ -3,7 +3,6 @@ import time
 from typing import Any
 
 from fastapi import Response
-from nxtools import log_traceback
 from pydantic.error_wrappers import ValidationError
 
 from ayon_server.access.utils import folder_access_list
@@ -13,6 +12,7 @@ from ayon_server.helpers.hierarchy_cache import rebuild_hierarchy_cache
 from ayon_server.lib.redis import Redis
 from ayon_server.types import OPModel
 from ayon_server.utils import json_loads
+from nxtools import log_traceback
 
 from .router import router
 

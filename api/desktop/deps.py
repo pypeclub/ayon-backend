@@ -3,7 +3,6 @@ import os
 
 import aiofiles
 from fastapi import BackgroundTasks, Path, Query, Request, Response
-from nxtools import logging
 
 from ayon_server.api.dependencies import CurrentUser
 from ayon_server.api.files import handle_download, handle_upload
@@ -23,6 +22,7 @@ from ayon_server.installer.models import (
 )
 from ayon_server.lib.postgres import Postgres
 from ayon_server.types import Field, OPModel
+from nxtools import logging
 
 from .common import (
     InstallResponseModel,

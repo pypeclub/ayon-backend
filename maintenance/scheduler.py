@@ -1,10 +1,9 @@
 import asyncio
 import datetime
 
-from nxtools import log_traceback, logging
-
 from ayon_server.config import ayonconfig
 from maintenance.maintenance import run_maintenance
+from nxtools import log_traceback, logging
 
 
 class MaintenanceScheduler:

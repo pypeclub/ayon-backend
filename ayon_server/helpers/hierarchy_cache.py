@@ -1,11 +1,10 @@
 import time
 from typing import Any
 
-from nxtools import logging
-
 from ayon_server.lib.postgres import Connection, Postgres
 from ayon_server.lib.redis import Redis
 from ayon_server.utils import json_dumps
+from nxtools import logging
 
 
 async def rebuild_hierarchy_cache(

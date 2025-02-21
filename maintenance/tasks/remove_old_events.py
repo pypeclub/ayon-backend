@@ -1,10 +1,9 @@
 import time
 
-from nxtools import logging
-
 from ayon_server.config import ayonconfig
 from ayon_server.lib.postgres import Postgres
 from maintenance.maintenance_task import StudioMaintenanceTask
+from nxtools import logging
 
 
 async def clear_events() -> None:

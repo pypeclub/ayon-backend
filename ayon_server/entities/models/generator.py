@@ -8,10 +8,10 @@ import uuid
 from datetime import datetime
 from typing import Any, Literal, TypeVar
 
-from nxtools import log_traceback
 from pydantic import BaseModel, Field, create_model
 
 from ayon_server.types import AttributeEnumItem, AttributeType
+from nxtools import log_traceback
 
 C = TypeVar("C", bound=type)
 

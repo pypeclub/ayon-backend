@@ -4,10 +4,10 @@ from collections.abc import Callable
 from types import GenericAlias
 from typing import Any
 
-from nxtools import logging
 from pydantic import BaseModel, ValidationError, parse_obj_as
 
 from ayon_server.utils import json_dumps, json_loads  # , json_print
+from nxtools import logging
 
 pattern = re.compile(r"(?<!^)(?=[A-Z])")
 

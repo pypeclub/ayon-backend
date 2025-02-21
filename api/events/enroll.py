@@ -2,7 +2,6 @@ import re
 import time
 
 from fastapi import Request
-from nxtools import logging
 
 from ayon_server.api.dependencies import CurrentUser, Sender, SenderType
 from ayon_server.api.responses import EmptyResponse
@@ -17,6 +16,7 @@ from ayon_server.lib.redis import Redis
 from ayon_server.sqlfilter import QueryFilter
 from ayon_server.types import TOPIC_REGEX, Field, OPModel
 from ayon_server.utils import hash_data
+from nxtools import logging
 
 from .router import router
 

@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Any
 import boto3
 import httpx
 from fastapi import Request
-from nxtools import logging
 from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 from typing_extensions import AsyncGenerator
@@ -16,6 +15,7 @@ from ayon_server.config import ayonconfig
 from ayon_server.helpers.download import get_file_name_from_headers
 from ayon_server.helpers.statistics import update_traffic_stats
 from ayon_server.models.file_info import FileInfo
+from nxtools import logging
 
 from .common import FileGroup
 

@@ -2,13 +2,12 @@ import os
 from collections.abc import ItemsView
 from typing import Any
 
-from nxtools import log_traceback, logging
-
 from ayon_server.addons.addon import BaseServerAddon
 from ayon_server.addons.definition import ServerAddonDefinition
 from ayon_server.config import ayonconfig
 from ayon_server.exceptions import NotFoundException
 from ayon_server.lib.postgres import Postgres
+from nxtools import log_traceback, logging
 
 
 class AddonLibrary:

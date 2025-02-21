@@ -1,10 +1,9 @@
 import os
 import signal
 
-from nxtools import logging
-
 from ayon_server.events import EventStream
 from ayon_server.lib.postgres import Postgres
+from nxtools import logging
 
 
 def restart_server():

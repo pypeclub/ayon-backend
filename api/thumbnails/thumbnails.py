@@ -2,7 +2,6 @@ from typing import Any, Literal
 
 import aiocache
 from fastapi import APIRouter, Query, Request, Response
-from nxtools import logging
 
 from ayon_server.api.dependencies import (
     CurrentUser,
@@ -29,6 +28,7 @@ from ayon_server.helpers.thumbnails import get_fake_thumbnail, store_thumbnail
 from ayon_server.lib.postgres import Postgres
 from ayon_server.types import Field, OPModel
 from ayon_server.utils import EntityID
+from nxtools import logging
 
 #
 # Router

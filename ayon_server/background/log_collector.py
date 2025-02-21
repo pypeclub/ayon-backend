@@ -3,10 +3,9 @@ import queue
 import time
 from typing import Any
 
-from nxtools import logging
-
 from ayon_server.background.background_worker import BackgroundWorker
 from ayon_server.events import EventStream
+from nxtools import logging
 
 
 def parse_log_message(message):

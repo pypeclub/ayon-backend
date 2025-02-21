@@ -1,7 +1,6 @@
-from nxtools import logging
-
 from ayon_server.lib.postgres import Postgres
 from maintenance.maintenance_task import ProjectMaintenanceTask
+from nxtools import logging
 
 
 async def clear_activities(project_name: str) -> None:

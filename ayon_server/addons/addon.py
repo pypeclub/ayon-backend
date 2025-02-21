@@ -8,8 +8,6 @@ except ModuleNotFoundError:
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, Literal
 
-from nxtools import log_traceback, logging
-
 from ayon_server.actions.context import ActionContext
 from ayon_server.actions.execute import ActionExecutor, ExecuteResponseModel
 from ayon_server.actions.manifest import (
@@ -21,6 +19,7 @@ from ayon_server.exceptions import AyonException, BadRequestException, NotFoundE
 from ayon_server.lib.postgres import Postgres
 from ayon_server.settings import BaseSettingsModel, apply_overrides
 from ayon_server.settings.common import migrate_settings_overrides
+from nxtools import log_traceback, logging
 
 if TYPE_CHECKING:
     from fastapi import APIRouter

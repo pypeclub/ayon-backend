@@ -4,14 +4,13 @@ import json
 import random
 import sys
 
-from nxtools import critical_error, log_traceback, logging
-
 from ayon_server.entities import ProjectEntity
 from ayon_server.helpers.deploy_project import create_project_from_anatomy
 from ayon_server.lib.postgres import Postgres
 from ayon_server.settings.anatomy import Anatomy
 from ayon_server.settings.anatomy.tags import Tag
 from demogen.demogen import DemoGen
+from nxtools import critical_error, log_traceback, logging
 
 
 def create_color() -> str:

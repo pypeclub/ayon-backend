@@ -2,7 +2,6 @@ import traceback
 from typing import Any
 
 from fastapi import Query
-from nxtools import log_traceback, logging
 
 from ayon_server.addons import AddonLibrary
 from ayon_server.api.dependencies import CurrentUser, SiteID
@@ -10,6 +9,7 @@ from ayon_server.exceptions import NotFoundException
 from ayon_server.lib.postgres import Postgres
 from ayon_server.settings import BaseSettingsModel
 from ayon_server.types import NAME_REGEX, SEMVER_REGEX, Field, OPModel
+from nxtools import log_traceback, logging
 
 from .router import router
 

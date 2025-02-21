@@ -1,12 +1,11 @@
 __all__ = ["migrate_settings"]
 
-from nxtools import logging
-
 from ayon_server.addons.library import AddonLibrary
 from ayon_server.events import EventStream
 from ayon_server.exceptions import NotFoundException
 from ayon_server.helpers.migrate_addon_settings import migrate_addon_settings
 from ayon_server.lib.postgres import Connection, Postgres
+from nxtools import logging
 
 AddonVersionsDict = dict[str, str]
 

@@ -1,8 +1,7 @@
 import os
 
-from nxtools import log_traceback
-
 from ayon_server.helpers.modules import classes_from_module, import_module
+from nxtools import log_traceback
 
 PATHS = [
     "/extensions",

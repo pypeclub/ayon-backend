@@ -1,10 +1,9 @@
 import time
 from typing import Any
 
-from nxtools import logging
-
 from ayon_server.entities.core import attribute_library
 from ayon_server.lib.postgres import Postgres
+from nxtools import logging
 
 
 async def _rebuild_in_transaction(

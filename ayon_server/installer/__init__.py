@@ -1,7 +1,5 @@
 import asyncio
 
-from nxtools import log_traceback, logging
-
 from ayon_server.api.system import require_server_restart
 from ayon_server.background.background_worker import BackgroundWorker
 from ayon_server.events import EventStream
@@ -9,6 +7,7 @@ from ayon_server.installer.addons import install_addon_from_url, unpack_addon
 from ayon_server.installer.dependency_packages import download_dependency_package
 from ayon_server.installer.installers import download_installer
 from ayon_server.lib.postgres import Postgres
+from nxtools import log_traceback, logging
 
 from .addons import AddonZipInfo
 

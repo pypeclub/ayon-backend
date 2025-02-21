@@ -1,14 +1,13 @@
 import copy
 from typing import Any
 
-from nxtools import logging
-
 from ayon_server.addons import AddonLibrary
 from ayon_server.api.dependencies import CurrentUser, SiteID
 from ayon_server.api.responses import EmptyResponse
 from ayon_server.exceptions import NotFoundException
 from ayon_server.lib.postgres import Postgres
 from ayon_server.settings.postprocess import postprocess_settings_schema
+from nxtools import logging
 
 from .router import route_meta, router
 

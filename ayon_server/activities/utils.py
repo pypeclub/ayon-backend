@@ -1,9 +1,8 @@
 import re
 from typing import Any, get_args
 
-from nxtools import logging
-
 from ayon_server.lib.postgres import Postgres
+from nxtools import logging
 
 from .models import ActivityReferenceModel, EntityLinkTuple, ReferencedEntityType
 

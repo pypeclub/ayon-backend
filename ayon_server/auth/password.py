@@ -1,7 +1,6 @@
 import time
 
 from fastapi import Request
-from nxtools import logging
 
 from ayon_server.api.clientinfo import get_real_ip
 from ayon_server.auth.session import Session, SessionModel
@@ -17,6 +16,7 @@ from ayon_server.exceptions import ForbiddenException
 from ayon_server.lib.postgres import Postgres
 from ayon_server.lib.redis import Redis
 from ayon_server.utils import json_dumps
+from nxtools import logging
 
 
 async def check_failed_login(ip_address: str) -> None:

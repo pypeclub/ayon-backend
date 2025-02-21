@@ -5,8 +5,6 @@ import random
 import time
 from typing import Any
 
-from nxtools import logging
-
 from ayon_server.entities import (
     FolderEntity,
     ProductEntity,
@@ -19,6 +17,7 @@ from ayon_server.entities import (
 from ayon_server.lib.postgres import Connection, Postgres
 from ayon_server.utils import create_uuid, dict_exclude
 from demogen.generators import generators
+from nxtools import logging
 from setup.attributes import DEFAULT_ATTRIBUTES
 
 VERSIONS_PER_PRODUCT = 5

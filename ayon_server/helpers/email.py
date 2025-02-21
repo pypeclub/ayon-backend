@@ -8,12 +8,12 @@ from typing import TYPE_CHECKING, Literal, Union
 
 import aiocache
 import httpx
-from nxtools import log_traceback, logging
 from pydantic import BaseModel, Field
 
 from ayon_server.config import ayonconfig
 from ayon_server.exceptions import AyonException
 from ayon_server.helpers.cloud import CloudUtils
+from nxtools import log_traceback, logging
 
 if TYPE_CHECKING:
     from ayon_server.entities import UserEntity

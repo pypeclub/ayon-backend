@@ -1,7 +1,6 @@
 import time
 
 import httpx
-from nxtools import logging
 
 from ayon_server.addons.library import AddonLibrary
 from ayon_server.config import ayonconfig
@@ -13,6 +12,7 @@ from ayon_server.helpers.migrate_addon_settings import migrate_addon_settings
 from ayon_server.lib.postgres import Postgres
 from ayon_server.version import __version__ as ayon_version
 from maintenance.maintenance_task import StudioMaintenanceTask
+from nxtools import logging
 
 
 async def get_required_addons() -> list[dict[str, str]]:

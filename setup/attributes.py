@@ -1,8 +1,7 @@
 from typing import Any
 
-from nxtools import logging
-
 from ayon_server.lib.postgres import Postgres
+from nxtools import logging
 
 # The following parameters may be used:
 # name, scope, type, title, default, example,

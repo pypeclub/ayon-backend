@@ -1,10 +1,9 @@
-from nxtools import logging
-
 from ayon_server.api.dependencies import ActivityID, CurrentUser, ProjectName, VersionID
 from ayon_server.entities import VersionEntity
 from ayon_server.exceptions import BadRequestException, NotFoundException
 from ayon_server.lib.postgres import Postgres
 from ayon_server.types import Field, OPModel
+from nxtools import logging
 
 from .router import router
 

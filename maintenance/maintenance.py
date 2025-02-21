@@ -1,7 +1,5 @@
 import time
 
-from nxtools import log_traceback, logging
-
 from ayon_server.events import EventStream
 from ayon_server.helpers.project_list import get_project_list
 from maintenance.maintenance_task import (
@@ -9,6 +7,7 @@ from maintenance.maintenance_task import (
     StudioMaintenanceTask,
 )
 from maintenance.tasks import task_sequence
+from nxtools import log_traceback, logging
 
 
 async def run_maintenance():

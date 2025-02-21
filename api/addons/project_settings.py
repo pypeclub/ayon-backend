@@ -2,7 +2,6 @@ import copy
 from typing import Any
 
 from fastapi import Query
-from nxtools import logging
 from pydantic.error_wrappers import ValidationError
 
 from ayon_server.addons import AddonLibrary
@@ -21,6 +20,7 @@ from ayon_server.settings import BaseSettingsModel
 from ayon_server.settings.overrides import extract_overrides, list_overrides
 from ayon_server.settings.postprocess import postprocess_settings_schema
 from ayon_server.settings.set_addon_settings import set_addon_settings
+from nxtools import logging
 
 from .common import (
     ModifyOverridesRequestModel,

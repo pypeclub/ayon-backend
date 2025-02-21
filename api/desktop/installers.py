@@ -4,7 +4,6 @@ from typing import Literal
 
 import aiofiles
 from fastapi import BackgroundTasks, Query, Request
-from nxtools import logging
 
 from ayon_server.api.dependencies import CurrentUser
 from ayon_server.api.files import handle_download, handle_upload
@@ -24,6 +23,7 @@ from ayon_server.installer.models import (
 )
 from ayon_server.lib.postgres import Postgres
 from ayon_server.types import Field, OPModel, Platform
+from nxtools import logging
 
 from .common import (
     InstallResponseModel,

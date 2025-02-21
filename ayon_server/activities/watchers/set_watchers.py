@@ -1,12 +1,11 @@
 from collections.abc import AsyncGenerator
 
-from nxtools import logging
-
 from ayon_server.activities.create_activity import create_activity
 from ayon_server.entities import VersionEntity
 from ayon_server.entities.core.projectlevel import ProjectLevelEntity
 from ayon_server.entities.user import UserEntity
 from ayon_server.lib.postgres import Postgres
+from nxtools import logging
 
 from .watcher_list import build_watcher_list, get_watcher_list
 

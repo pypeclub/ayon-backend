@@ -2,7 +2,6 @@ import base64
 import functools
 import io
 
-from nxtools import logging
 from PIL import Image, UnidentifiedImageError
 from starlette.concurrency import run_in_threadpool
 
@@ -10,6 +9,7 @@ from ayon_server.exceptions import UnsupportedMediaException
 from ayon_server.files import Storages
 from ayon_server.helpers.mimetypes import guess_mime_type
 from ayon_server.lib.postgres import Postgres
+from nxtools import logging
 
 
 class ThumbnailProcessNoop(Exception):

@@ -1,7 +1,5 @@
 import time
 
-from nxtools import logging
-
 from ayon_server.auth.models import LoginResponseModel
 from ayon_server.auth.session import Session
 from ayon_server.entities import UserEntity
@@ -9,6 +7,7 @@ from ayon_server.exceptions import ForbiddenException
 from ayon_server.lib.postgres import Postgres
 from ayon_server.types import Field, OPModel
 from ayon_server.utils import create_hash
+from nxtools import logging
 
 from .router import router
 

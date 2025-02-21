@@ -8,10 +8,10 @@
 from typing import Annotated, Any
 
 from fastapi import Cookie, Depends, Header, Path, Query, Request
-from nxtools import logging
 
 from ayon_server.types import API_KEY_REGEX, PROJECT_NAME_REGEX, USER_NAME_REGEX
 from ayon_server.utils import EntityID, parse_access_token, parse_api_key
+from nxtools import logging
 
 
 async def dep_access_token(

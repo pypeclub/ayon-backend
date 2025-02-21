@@ -5,7 +5,6 @@ from urllib.parse import urlparse
 import aiocache
 from attributes.attributes import AttributeModel  # type: ignore
 from fastapi import Query, Request
-from nxtools import log_traceback, logging
 from pydantic import ValidationError
 
 from ayon_server.addons import AddonLibrary, SSOOption
@@ -20,6 +19,7 @@ from ayon_server.info import ReleaseInfo, get_release_info, get_uptime, get_vers
 from ayon_server.lib.postgres import Postgres
 from ayon_server.lib.redis import Redis
 from ayon_server.types import Field, OPModel
+from nxtools import log_traceback, logging
 
 from .router import router
 from .sites import SiteInfo
