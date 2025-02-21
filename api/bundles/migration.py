@@ -1,12 +1,11 @@
 __all__ = ["migrate_settings"]
 
-from nxtools import logging
-
 from ayon_server.addons.library import AddonLibrary
 from ayon_server.events import EventStream
 from ayon_server.exceptions import NotFoundException
 from ayon_server.helpers.migrate_addon_settings import migrate_addon_settings
 from ayon_server.lib.postgres import Connection, Postgres
+from ayon_server.logging import logger
 
 AddonVersionsDict = dict[str, str]
 
@@ -77,7 +76,7 @@ async def _migrate_settings_by_bundle(
         try:
             source_addon = AddonLibrary.addon(addon_name, source_version)
         except NotFoundException:
-            logging.warning(
+            logger.warning(
                 f"Source addon {addon_name} version {source_version} is not installed"
             )
             continue
@@ -85,7 +84,7 @@ async def _migrate_settings_by_bundle(
         try:
             target_addon = AddonLibrary.addon(addon_name, target_version)
         except NotFoundException:
-            logging.warning(
+            logger.warning(
                 f"Target addon {addon_name} version {target_version} is not installed"
             )
             continue

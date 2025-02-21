@@ -1,10 +1,10 @@
 from typing import Any
 
-from nxtools import logging
 from pydantic import BaseModel
 from pydantic.fields import FieldInfo, Undefined
 from pydantic.typing import NoArgAnyCallable
 
+from ayon_server.logging import logger
 from ayon_server.utils import camelize, json_dumps, json_loads
 
 
@@ -55,7 +55,7 @@ def RestField(
     # sanity checks
 
     if kwargs:
-        logging.debug(f"RestField: unsupported argument: {kwargs}")
+        logger.debug(f"RestField: unsupported argument: {kwargs}")
 
     # Pydantic 1 uses `example` while Pydantic 2 uses `examples`
     # We will support both, but before Pydantic 2 is used, `examples` will

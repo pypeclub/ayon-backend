@@ -3,75 +3,57 @@ import queue
 import time
 from typing import Any
 
-from nxtools import logging
-
 from ayon_server.background.background_worker import BackgroundWorker
+from ayon_server.config import ayonconfig
 from ayon_server.events import EventStream
-
-
-def parse_log_message(message):
-    """Convert nxtools log message to event system message."""
-    message_type = message.get("message_type")
-    if message_type is None or not isinstance(message_type, int):
-        raise ValueError("Invalid log message type")
-    topic = {
-        0: "log.debug",
-        1: "log.info",
-        2: "log.warning",
-        3: "log.error",
-        4: "log.success",
-    }[message["message_type"]]
-
-    try:
-        description = message["message"].splitlines()[0]
-    except (IndexError, AttributeError):
-        raise ValueError("Invalid log message")
-
-    if len(description) > 100:
-        description = description[:100] + "..."
-
-    payload = {
-        "message": message["message"],
-    }
-
-    return {
-        "topic": topic,
-        "description": description,
-        "payload": payload,
-    }
+from ayon_server.logging import logger
 
 
 class LogCollector(BackgroundWorker):
+    """Log handler that collects log messages and dispatches them to the event stream.
+
+    It is started as a background worker and runs in the background
+    so it does not block the main loop.
+    """
+
     def initialize(self):
         self.queue: queue.Queue[dict[str, Any]] = queue.Queue()
         self.start_time = time.time()
-        logging.add_handler(self)
+        logger.add(self, level=ayonconfig.log_level_db)
 
-    def __call__(self, **kwargs):
+    def __call__(self, message):
         # We need to add messages to the queue even if the
         # collector is not running to catch the messages
         # that are logged during the startup.
-        if kwargs["message_type"] == 0:
-            return
+        record = message.record
         if len(self.queue.queue) > 1000:
             return
-        self.queue.put(kwargs)
+
+        topic = f"log.{record['level'].name.lower()}"
+        description = record["message"].splitlines()[0].strip()
+
+        extra = dict(record["extra"])
+        extra["file"] = record["file"].path
+        extra["function"] = record["function"]
+        extra["line"] = record["line"]
+
+        user = extra.pop("user", None)
+        project = record.pop("project", None)
+        self.queue.put(
+            {
+                "topic": topic,
+                "description": description,
+                "user": user,
+                "project": project,
+                "payload": extra,
+            }
+        )
 
     async def process_message(self, record):
         try:
-            message = parse_log_message(record)
-        except ValueError:
-            return
-
-        try:
-            await EventStream.dispatch(
-                message["topic"],
-                # user=None, (TODO: implement this?)
-                description=message["description"],
-                payload=message["payload"],
-            )
+            await EventStream.dispatch(**record)
         except Exception:
-            m = f"Unable to dispatch log message: {message['description']}"
+            m = f"Unable to dispatch log message: {record}"
             # do not use the logger, if you don't like recursion
             print(m, flush=True)
 
@@ -99,7 +81,7 @@ class LogCollector(BackgroundWorker):
 
     async def finalize(self):
         while not self.queue.empty():
-            logging.debug(
+            logger.debug(
                 f"Processing {len(self.queue.queue)} remaining log messages",
                 handlers=None,
                 user="server",

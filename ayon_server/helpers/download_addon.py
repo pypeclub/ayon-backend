@@ -1,12 +1,11 @@
 import hashlib
 
-from nxtools import logging
-
 from ayon_server.constraints import Constraints
 from ayon_server.events import EventStream
 from ayon_server.exceptions import ForbiddenException
 from ayon_server.installer import background_installer
 from ayon_server.lib.postgres import Postgres
+from ayon_server.logging import logger
 
 
 async def download_addon(
@@ -58,7 +57,7 @@ async def download_addon(
     url_label = url[:50]
     if url_label != url:
         url_label += "..."
-    logging.debug(f"Downloading addon from {url_label}")
+    logger.debug(f"Downloading addon from {url_label}")
     if no_queue:
         await background_installer.process_event(event_id)
     else:

@@ -1,6 +1,6 @@
 import asyncio
 
-from nxtools import log_traceback, logging
+from ayon_server.logging import log_traceback, logger
 
 
 class BackgroundWorker:
@@ -13,7 +13,7 @@ class BackgroundWorker:
         pass
 
     def start(self):
-        logging.debug(f"Starting background worker {self.__class__.__name__}")
+        logger.debug(f"Starting background worker {self.__class__.__name__}")
         self.task = asyncio.create_task(self._run())
 
     async def shutdown(self):
@@ -22,9 +22,9 @@ class BackgroundWorker:
 
         self.shutting_down = True
         while self.is_running:
-            logging.debug(f"Waiting for {self.__class__.__name__} to stop", handlers=[])
+            logger.debug(f"Waiting for {self.__class__.__name__} to stop", handlers=[])
             await asyncio.sleep(0.1)
-        logging.debug(f"{self.__class__.__name__} stopped", handlers=[])
+        logger.debug(f"{self.__class__.__name__} stopped", handlers=[])
 
     @property
     def is_running(self):
@@ -34,7 +34,7 @@ class BackgroundWorker:
         try:
             await self.run()
         except asyncio.CancelledError:
-            logging.debug(f"{self.__class__.__name__} is cancelled", handlers=[])
+            logger.debug(f"{self.__class__.__name__} is cancelled", handlers=[])
             self.shutting_down = True
         except Exception:
             log_traceback(handlers=[])
@@ -43,7 +43,7 @@ class BackgroundWorker:
             self.task = None
 
         if not self.shutting_down:
-            logging.debug("Restarting", self.__class__.__name__, handlers=[])
+            logger.debug("Restarting", self.__class__.__name__, handlers=[])
             self.start()
 
     async def run(self):

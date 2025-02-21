@@ -1,5 +1,3 @@
-from nxtools import logging
-
 from ayon_server.activities.create_activity import create_activity
 from ayon_server.activities.watchers.set_watchers import ensure_watching
 from ayon_server.entities import UserEntity, VersionEntity
@@ -7,6 +5,7 @@ from ayon_server.events import EventStream
 from ayon_server.exceptions import BadRequestException
 from ayon_server.files import Storages, create_project_file_record
 from ayon_server.helpers.ffprobe import availability_from_media_info
+from ayon_server.logging import logger
 from ayon_server.reviewables.models import ReviewableAuthor, ReviewableModel
 
 
@@ -51,7 +50,7 @@ async def create_reviewable(
     check_valid_mime(content_type)
 
     if not media_info:
-        logging.warning(f"Failed to extract media info for {file_name}")
+        logger.warning(f"Failed to extract media info for {file_name}")
         try:
             await storage.unlink(file_id)
         except Exception:

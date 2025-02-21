@@ -5,7 +5,6 @@ from urllib.parse import urlparse
 import aiocache
 from attributes.attributes import AttributeModel  # type: ignore
 from fastapi import Query, Request
-from nxtools import log_traceback, logging
 from pydantic import ValidationError
 
 from ayon_server.addons import AddonLibrary, SSOOption
@@ -19,6 +18,7 @@ from ayon_server.helpers.email import is_mailing_enabled
 from ayon_server.info import ReleaseInfo, get_release_info, get_uptime, get_version
 from ayon_server.lib.postgres import Postgres
 from ayon_server.lib.redis import Redis
+from ayon_server.logging import log_traceback, logger
 from ayon_server.types import Field, OPModel
 
 from .router import router
@@ -182,7 +182,7 @@ async def get_user_sites(
         # if the current site is not in the database
         # or has been changed, upsert it
         if current_needs_update or not current_site_exists:
-            logging.debug(f"Registering to site {current_site.id}", user=user_name)
+            logger.debug(f"Registering to site {current_site.id}", user=user_name)
             mdata = current_site.dict()
             mid = mdata.pop("id")
             await Postgres.execute(

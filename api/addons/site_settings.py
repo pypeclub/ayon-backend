@@ -1,13 +1,12 @@
 import copy
 from typing import Any
 
-from nxtools import logging
-
 from ayon_server.addons import AddonLibrary
 from ayon_server.api.dependencies import CurrentUser, SiteID
 from ayon_server.api.responses import EmptyResponse
 from ayon_server.exceptions import NotFoundException
 from ayon_server.lib.postgres import Postgres
+from ayon_server.logging import logger
 from ayon_server.settings.postprocess import postprocess_settings_schema
 
 from .router import route_meta, router
@@ -27,7 +26,7 @@ async def get_addon_site_settings_schema(
     model = addon.get_site_settings_model()
 
     if model is None:
-        logging.error(f"No site settings schema for addon {addon_name}")
+        logger.error(f"No site settings schema for addon {addon_name}")
         return {}
 
     schema = copy.deepcopy(model.schema())
@@ -60,7 +59,7 @@ async def get_addon_site_settings(
     model = addon.get_site_settings_model()
 
     if model is None:
-        logging.error(f"No site settings schema for addon {addon_name}")
+        logger.error(f"No site settings schema for addon {addon_name}")
         return {}
 
     data = {}
@@ -90,7 +89,7 @@ async def set_addon_site_settings(
     model = addon.get_site_settings_model()
 
     if model is None:
-        logging.error(f"No site settings schema for addon {addon_name}")
+        logger.error(f"No site settings schema for addon {addon_name}")
         return EmptyResponse()
 
     data = model(**payload)

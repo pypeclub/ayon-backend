@@ -2,7 +2,6 @@ import base64
 import functools
 import io
 
-from nxtools import logging
 from PIL import Image, UnidentifiedImageError
 from starlette.concurrency import run_in_threadpool
 
@@ -10,6 +9,7 @@ from ayon_server.exceptions import UnsupportedMediaException
 from ayon_server.files import Storages
 from ayon_server.helpers.mimetypes import guess_mime_type
 from ayon_server.lib.postgres import Postgres
+from ayon_server.logging import logger
 
 
 class ThumbnailProcessNoop(Exception):
@@ -113,7 +113,7 @@ async def process_thumbnail(
                         raise ThumbnailProcessNoop()
                     return image_bytes
 
-                logging.debug(
+                logger.debug(
                     f"Resizing image from {img.size} to {(new_width, new_height)}"
                 )
                 img = img.resize((new_width, new_height), Image.LANCZOS)  # type: ignore
@@ -167,15 +167,13 @@ async def store_thumbnail(
     if guessed_mime is None:
         # This shouldn't happen, but we'll log it.
         # Upload will probably fail later on, in process_thumbnail.
-        logging.warning(
-            f"Could not guess mime type of thumbnail. Using provided {mime}"
-        )
+        logger.warning(f"Could not guess mime type of thumbnail. Using provided {mime}")
 
     elif mime and guessed_mime != mime:
         # This is a warning, not an error, because we can still store the thumbnail
         # even if the mime type is wrong. We're just logging it and using the
         # correct mime type instead of the provided one.
-        logging.warning(
+        logger.warning(
             "Thumbnail mime type mismatch: "
             f"Payload contains {guessed_mime} "
             f"but was requested to store {mime}"

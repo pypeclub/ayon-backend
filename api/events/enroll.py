@@ -2,7 +2,6 @@ import re
 import time
 
 from fastapi import Request
-from nxtools import logging
 
 from ayon_server.api.dependencies import CurrentUser, Sender, SenderType
 from ayon_server.api.responses import EmptyResponse
@@ -14,6 +13,7 @@ from ayon_server.exceptions import (
 )
 from ayon_server.lib.postgres import Postgres
 from ayon_server.lib.redis import Redis
+from ayon_server.logging import logger
 from ayon_server.sqlfilter import QueryFilter
 from ayon_server.types import TOPIC_REGEX, Field, OPModel
 from ayon_server.utils import hash_data
@@ -120,7 +120,7 @@ async def enroll(
             if not args:
                 print()
             else:
-                logging.debug("🦥", *args)
+                logger.debug("🦥", *args)
 
     if not current_user.is_service:
         raise ForbiddenException("Only services can enroll for jobs")

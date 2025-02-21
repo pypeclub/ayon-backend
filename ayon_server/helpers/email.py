@@ -8,12 +8,12 @@ from typing import TYPE_CHECKING, Literal, Union
 
 import aiocache
 import httpx
-from nxtools import log_traceback, logging
 from pydantic import BaseModel, Field
 
 from ayon_server.config import ayonconfig
 from ayon_server.exceptions import AyonException
 from ayon_server.helpers.cloud import CloudUtils
+from ayon_server.logging import log_traceback, logger
 
 if TYPE_CHECKING:
     from ayon_server.entities import UserEntity
@@ -26,7 +26,7 @@ async def is_mailing_enabled() -> MailingEnabled:
     """Check if mailing is enabled"""
 
     if ayonconfig.email_smtp_host:
-        logging.debug("Enabled SMTP email support")
+        logger.debug("Enabled SMTP email support")
         return "smtp"
 
     try:
@@ -50,7 +50,7 @@ async def is_mailing_enabled() -> MailingEnabled:
 
     data = res.json()
     if data.get("subscriptions"):
-        logging.debug("Enabled Ynput Cloud API email support")
+        logger.debug("Enabled Ynput Cloud API email support")
         return "api"
 
     return False

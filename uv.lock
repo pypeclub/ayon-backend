@@ -162,7 +162,6 @@ dependencies = [
     { name = "gunicorn" },
     { name = "httpx" },
     { name = "loguru" },
-    { name = "nxtools" },
     { name = "orjson" },
     { name = "pillow" },
     { name = "psutil" },
@@ -212,7 +211,6 @@ requires-dist = [
     { name = "gunicorn", specifier = ">=23.0" },
     { name = "httpx", specifier = ">=0.26" },
     { name = "loguru", specifier = ">=0.7.3" },
-    { name = "nxtools", specifier = "==1.6" },
     { name = "orjson", specifier = ">=3.8.6" },
     { name = "pillow", specifier = ">=10.3.0" },
     { name = "psutil", specifier = ">=5.9.4" },
@@ -745,19 +743,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/43/16/fc88b08840de0e0a72a2f9d8c6bae36be573e475a6326ae854bcc549fc45/nodeenv-1.9.1.tar.gz", hash = "sha256:6ec12890a2dab7946721edbfbcd91f3319c6ccc9aec47be7c7e6b7011ee6645f", size = 47437 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d2/1d/1b658dbd2b9fa9c4c9f32accbfc0205d532c8c6194dc0f2a4c0428e7128a/nodeenv-1.9.1-py2.py3-none-any.whl", hash = "sha256:ba11c9782d29c27c70ffbdda2d7415098754709be8a7056d79a737cd901155c9", size = 22314 },
-]
-
-[[package]]
-name = "nxtools"
-version = "1.6"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "colorama" },
-    { name = "unidecode" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/b8/db/49d09a2b2991fff854878aae301b7f964c89242660337c030084b7a19ecb/nxtools-1.6.tar.gz", hash = "sha256:e91839eef643483a3165165a46a693ad976d40a393ee5476a341e4e8bb102b92", size = 18176 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ab/6d/3e97c9bb6805fec30447e8df843f8f468ca7c31ec909ef9e26642cc8a76f/nxtools-1.6-py3-none-any.whl", hash = "sha256:cde2d2c19193a2bd9c8071eeb3f121474ec34ab5c014de9a90f0c434cdfee716", size = 19865 },
 ]
 
 [[package]]

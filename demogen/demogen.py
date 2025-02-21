@@ -5,8 +5,6 @@ import random
 import time
 from typing import Any
 
-from nxtools import logging
-
 from ayon_server.entities import (
     FolderEntity,
     ProductEntity,
@@ -17,6 +15,7 @@ from ayon_server.entities import (
     WorkfileEntity,
 )
 from ayon_server.lib.postgres import Connection, Postgres
+from ayon_server.logging import logger
 from ayon_server.utils import create_uuid, dict_exclude
 from demogen.generators import generators
 from setup.attributes import DEFAULT_ATTRIBUTES
@@ -70,14 +69,14 @@ class DemoGen:
         self.project_name = project_name
         self.project = await ProjectEntity.load(project_name)
 
-        logging.info(f"Creating folders for project {project_name}")
+        logger.info(f"Creating folders for project {project_name}")
 
         tasks = []
         for folder_data in hierarchy:
             tasks.append(self.create_branch(**folder_data))
 
         await asyncio.gather(*tasks)
-        logging.info("Refreshing views")
+        logger.info("Refreshing views")
         await Postgres.execute(
             f"""
             REFRESH MATERIALIZED VIEW project_{self.project.name}.hierarchy;
@@ -86,15 +85,13 @@ class DemoGen:
         )
 
         elapsed_time = time.monotonic() - start_time
-        logging.info(f"{self.folder_count} folders created")
-        logging.info(f"{self.product_count} product created")
-        logging.info(f"{self.version_count} versions created")
-        logging.info(f"{self.representation_count} representations created")
-        logging.info(f"{self.task_count} tasks created")
-        logging.info(f"{self.workfile_count} workfiles created")
-        logging.goodnews(
-            f"Project {self.project_name} demo in {elapsed_time:.2f} seconds"
-        )
+        logger.info(f"{self.folder_count} folders created")
+        logger.info(f"{self.product_count} product created")
+        logger.info(f"{self.version_count} versions created")
+        logger.info(f"{self.representation_count} representations created")
+        logger.info(f"{self.task_count} tasks created")
+        logger.info(f"{self.workfile_count} workfiles created")
+        logger.info(f"Project {self.project_name} demo in {elapsed_time:.2f} seconds")
 
     def get_entity_tags(self):
         """return a list of random tags for entity"""
@@ -124,7 +121,7 @@ class DemoGen:
     ) -> FolderEntity:
         self.folder_count += 1
         if self.folder_count % 100 == 0:
-            logging.debug(f"{self.folder_count} folders created")
+            logger.debug(f"{self.folder_count} folders created")
 
         # Propagate project attributes
         attrib = kwargs.get("attrib", {})

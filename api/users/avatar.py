@@ -5,7 +5,6 @@ import os
 import aiofiles
 import httpx
 from fastapi import Request, Response
-from nxtools import logging
 
 from ayon_server.api.dependencies import CurrentUser, UserName
 from ayon_server.api.files import image_response_from_bytes
@@ -14,6 +13,7 @@ from ayon_server.exceptions import NotFoundException
 from ayon_server.helpers.thumbnails import process_thumbnail
 from ayon_server.lib.postgres import Postgres
 from ayon_server.lib.redis import Redis
+from ayon_server.logging import logger
 
 from .router import router
 
@@ -113,7 +113,7 @@ async def delete_avatar_file(user_name: str) -> bool:
             try:
                 os.remove(avatar_path)
             except Exception as e:
-                logging.error(f"Failed to delete avatar file {avatar_path}: {e}")
+                logger.error(f"Failed to delete avatar file {avatar_path}: {e}")
             else:
                 deleted = True
     return deleted
@@ -140,7 +140,7 @@ async def obtain_avatar(user_name: str) -> bytes:
 
     try:
         avatar_bytes = await load_avatar_file(user_name)
-        logging.debug(f"Loaded avatar for {user_name} from file")
+        logger.debug(f"Loaded avatar for {user_name} from file")
     except FileNotFoundError:
         pass
 
@@ -152,18 +152,18 @@ async def obtain_avatar(user_name: str) -> bytes:
                 response.raise_for_status()
                 avatar_bytes = response.content
             except httpx.HTTPStatusError:
-                logging.warning(
+                logger.warning(
                     f"Failed to fetch user {user_name} avatar from {avatar_url}. "
                     f"Error: {response.status_code}"
                 )
             else:
                 avatar_bytes = await process_thumbnail(avatar_bytes, format="JPEG")
-                logging.debug(f"Successfully fetched avatar for {user_name} from url")
+                logger.debug(f"Successfully fetched avatar for {user_name} from url")
 
     if not avatar_bytes:
         full_name = res[0]["full_name"] or ""
         avatar_bytes = create_initials_svg(user_name, full_name).encode()
-        logging.debug(f"Generated initials avatar for {user_name}")
+        logger.debug(f"Generated initials avatar for {user_name}")
 
     return avatar_bytes
 

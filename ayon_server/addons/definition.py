@@ -3,10 +3,11 @@ from typing import TYPE_CHECKING
 
 import semver
 import yaml
-from nxtools import log_traceback, logging, slugify
 
 from ayon_server.addons.addon import METADATA_KEYS, BaseServerAddon
 from ayon_server.helpers.modules import classes_from_module, import_module
+from ayon_server.logging import log_traceback, logger
+from ayon_server.utils import slugify
 
 if TYPE_CHECKING:
     from ayon_server.addons.library import AddonLibrary
@@ -23,7 +24,7 @@ class ServerAddonDefinition:
         self._versions: dict[str, BaseServerAddon] | None = None
 
         if not self.versions:
-            logging.warning(f"Addon {self.name} has no versions")
+            logger.warning(f"Addon {self.name} has no versions")
             return
 
         for version in self.versions.values():
@@ -83,7 +84,7 @@ class ServerAddonDefinition:
                             break
 
                 except AssertionError as e:
-                    logging.error(f"Failed to initialize addon {version_dir}: {e}")
+                    logger.error(f"Failed to initialize addon {version_dir}: {e}")
                 except Exception:
                     log_traceback(f"Failed to initialize addon {version_dir}")
 
@@ -153,7 +154,7 @@ class ServerAddonDefinition:
         for Addon in classes_from_module(BaseServerAddon, module):
             addon = Addon(self, addon_dir=addon_dir, **metadata)
             if addon.restart_requested:
-                logging.warning(
+                logger.warning(
                     f"{addon}requested server restart during initialization."
                 )
                 self.restart_requested = True
@@ -179,7 +180,7 @@ class ServerAddonDefinition:
             addon = Addon(self, addon_dir)
             addon.legacy = True
             if addon.restart_requested:
-                logging.warning(
+                logger.warning(
                     f"{addon} requested server restart during initialization."
                 )
                 self.restart_requested = True

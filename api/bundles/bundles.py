@@ -1,7 +1,6 @@
 from typing import Any, Literal
 
 from fastapi import Query
-from nxtools import logging
 
 from ayon_server.addons import AddonLibrary
 from ayon_server.api.dependencies import CurrentUser, Sender, SenderType
@@ -14,6 +13,7 @@ from ayon_server.exceptions import (
     NotFoundException,
 )
 from ayon_server.lib.postgres import Connection, Postgres
+from ayon_server.logging import logger
 from ayon_server.types import Field, OPModel, Platform
 
 from .actions import promote_bundle
@@ -174,7 +174,7 @@ async def create_new_bundle(
     for system_addon_name, addon_definition in AddonLibrary.items():
         if addon_definition.is_system:
             if system_addon_name not in bundle.addons:
-                logging.debug(
+                logger.debug(
                     f"Adding system addon {system_addon_name} to bundle {bundle.name}"
                 )
                 if addon_definition.latest:
@@ -254,7 +254,7 @@ async def update_bundle(
         #
 
         if bundle.is_dev:
-            logging.debug(f"Updating dev bundle {bundle.name}")
+            logger.debug(f"Updating dev bundle {bundle.name}")
             if patch.active_user is not None:
                 # remove user from previously assigned bundles
                 # to avoid constraint violation
@@ -270,7 +270,7 @@ async def update_bundle(
             if patch.installer_version is not None:
                 bundle.installer_version = patch.installer_version
         else:
-            logging.debug(f"Updating bundle {bundle.name}")
+            logger.debug(f"Updating bundle {bundle.name}")
             bundle.active_user = None
 
         # Dependency packages
@@ -289,7 +289,7 @@ async def update_bundle(
             for addon_name, addon_version in patch.addons.items():
                 addon_definition = library.get(addon_name)
                 if addon_definition is None:
-                    logging.warning(f"Addon {addon_name} does not exist, ignoring")
+                    logger.warning(f"Addon {addon_name} does not exist, ignoring")
                     continue
                 is_server = addon_definition.addon_type == "server"
                 if not bundle.is_dev and not is_server:

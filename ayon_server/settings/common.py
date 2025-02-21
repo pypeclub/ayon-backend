@@ -4,9 +4,9 @@ from collections.abc import Callable
 from types import GenericAlias
 from typing import Any
 
-from nxtools import logging
 from pydantic import BaseModel, ValidationError, parse_obj_as
 
+from ayon_server.logging import logger
 from ayon_server.utils import json_dumps, json_loads  # , json_print
 
 pattern = re.compile(r"(?<!^)(?=[A-Z])")
@@ -79,17 +79,17 @@ def migrate_settings_overrides(
                     )
                 else:
                     sval = str(value)[:70]
-                    logging.warning(f"Unsupported type for {key_path} model: {sval}")
+                    logger.warning(f"Unsupported type for {key_path} model: {sval}")
             else:
                 try:
                     validated_value = parse_obj_as(field_type.outer_type_, value)
                     new_data[key] = validated_value
                 except ValidationError:
-                    logging.warning(f"Failed to validate {key} with value {value}")
+                    logger.warning(f"Failed to validate {key} with value {value}")
                     # Skip incompatible fields
                     continue
         else:
-            logging.warning(f"Skipping unknown key: {key}")
+            logger.warning(f"Skipping unknown key: {key}")
 
     # if not parent_key:
     #     json_print(new_data, "New data")

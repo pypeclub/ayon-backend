@@ -20,6 +20,7 @@ from ayon_server.exceptions import (
 from ayon_server.helpers.project_list import build_project_list, get_project_list
 from ayon_server.lib.postgres import Postgres
 from ayon_server.lib.redis import Redis
+from ayon_server.logging import logger
 from ayon_server.types import (
     API_KEY_REGEX,
     NAME_REGEX,
@@ -187,6 +188,7 @@ async def dep_current_user(
     await Redis.incr("user-requests", session_data.user.name)
     user = UserEntity.from_record(session_data.user.dict())
     user.add_session(session_data)
+    logger.trace(f"Authenticated as {user.name}", user=user.name)
 
     if x_as_user is not None and user.is_service:
         # sudo :)

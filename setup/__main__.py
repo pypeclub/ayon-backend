@@ -4,12 +4,10 @@ import time
 from pathlib import Path
 from typing import Any
 
-from nxtools import critical_error, log_to_file, log_traceback, logging
-
-from ayon_server.config import ayonconfig
 from ayon_server.helpers.project_list import get_project_list
 from ayon_server.initialize import ayon_init
 from ayon_server.lib.postgres import Postgres
+from ayon_server.logging import critical_error, log_traceback, logger
 from ayon_server.version import __version__ as server_version
 from setup.access_groups import deploy_access_groups
 from setup.attributes import deploy_attributes
@@ -43,7 +41,7 @@ async def db_migration(has_schema: bool) -> int:
     # the schema is not present yet.
     if has_schema:
         # logging.debug(f"Current database version: {current_version}")
-        logging.debug(f"Applying {len(available_migrations)} database migrations")
+        logger.debug(f"Applying {len(available_migrations)} database migrations")
         migration_version = 0
         for migration in available_migrations:
             migration_version = int(migration.stem)
@@ -71,7 +69,7 @@ async def db_migration(has_schema: bool) -> int:
             elapsed = time.monotonic() - start_time
             if elapsed > 1:
                 msg = f"Migration {migration.stem} applied in {elapsed:.2f}s (slow...)"
-                logging.debug(msg)
+                logger.debug(msg)
         return migration_version
 
     return int(available_migrations[-1].stem)
@@ -80,14 +78,14 @@ async def db_migration(has_schema: bool) -> int:
 async def main(force: bool | None = None) -> None:
     """Main entry point for setup."""
 
-    logging.info("Starting setup")
+    logger.info("Starting setup")
 
     await ayon_init(extensions=False)
 
     try:
         await Postgres.fetch("SELECT * FROM projects")
     except Exception:
-        logging.warning("Database is empty")
+        logger.warning("Database is empty")
         has_schema = False
         force_install = True
     else:
@@ -100,7 +98,7 @@ async def main(force: bool | None = None) -> None:
             force_install = force
 
     if ("--with-schema" in sys.argv) or (not has_schema):
-        logging.info("(re)creating database schema")
+        logger.info("(re)creating database schema")
 
         schema = Path("schemas/schema.drop.sql").read_text()
         await Postgres.execute(schema)
@@ -168,7 +166,7 @@ async def main(force: bool | None = None) -> None:
 
         if bundle_data := template.get("initialBundle"):
             if not isinstance(bundle_data, dict):
-                logging.warning("Invalid initial bundle data")
+                logger.warning("Invalid initial bundle data")
             else:
                 await create_initial_bundle(bundle_data)
 
@@ -198,13 +196,10 @@ async def main(force: bool | None = None) -> None:
                 "Project may be corrupted."
             )
 
-    logging.goodnews("Setup is finished")
+    logger.success("Setup is finished")
 
 
 if __name__ == "__main__":
-    logging.user = "setup"
-    if ayonconfig.log_file is not None:
-        logging.add_handler(log_to_file(ayonconfig.log_file))
     try:
         asyncio.run(main())
     except Exception:

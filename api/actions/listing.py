@@ -1,5 +1,4 @@
 import aiocache
-from nxtools import logging
 
 from ayon_server.actions.context import ActionContext
 from ayon_server.actions.manifest import BaseActionManifest, SimpleActionManifest
@@ -9,6 +8,7 @@ from ayon_server.events import EventModel, EventStream
 from ayon_server.exceptions import NotFoundException
 from ayon_server.lib.postgres import Postgres
 from ayon_server.lib.redis import Redis
+from ayon_server.logging import logger
 from ayon_server.types import Field, OPModel
 from ayon_server.utils import json_dumps, json_loads
 
@@ -143,7 +143,7 @@ class SimpleActionCache:
 
     @classmethod
     async def clear_action_cache(cls) -> None:
-        logging.debug("Clearing actions cache")
+        logger.debug("Clearing actions cache")
         keys = await Redis.keys(cls.ns)
         for key in keys:
             await Redis.delete(cls.ns, key)

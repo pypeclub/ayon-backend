@@ -1,8 +1,7 @@
 from typing import Any
 
-from nxtools import logging
-
 from ayon_server.lib.postgres import Postgres
+from ayon_server.logging import logger
 
 # The following parameters may be used:
 # name, scope, type, title, default, example,
@@ -276,7 +275,7 @@ async def deploy_attributes() -> None:
                 for k in tdata["scope"].split(",")
             ]
         except KeyError:
-            logging.error(f"Unknown scope specified on {name}. Skipping")
+            logger.error(f"Unknown scope specified on {name}. Skipping")
             continue
 
         if tdata["type"] not in [
@@ -288,7 +287,7 @@ async def deploy_attributes() -> None:
             "list_of_strings",
             "list_of_integers",
         ]:
-            logging.error(f"Unknown type sepecified on {name}. Skipping.")
+            logger.error(f"Unknown type sepecified on {name}. Skipping.")
             continue
 
         data = {

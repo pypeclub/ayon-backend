@@ -1,8 +1,9 @@
 from typing import Any
 
-from nxtools import logging
 from pydantic.fields import FieldInfo, Undefined
 from pydantic.typing import AnyCallable, NoArgAnyCallable
+
+from ayon_server.logging import logger
 
 """
 Unused pydantic fields
@@ -61,7 +62,7 @@ def SettingsField(
     conditional_enum = conditional_enum or conditionalEnum
 
     if kwargs:
-        logging.debug(f"SettingsField: unsupported argument: {kwargs}")
+        logger.debug(f"SettingsField: unsupported argument: {kwargs}")
 
     # Pydantic 1 uses `example` while Pydantic 2 uses `examples`
     # We will support both, but before Pydantic 2 is used, `examples` will

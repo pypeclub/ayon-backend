@@ -4,11 +4,10 @@ import json
 import random
 import sys
 
-from nxtools import critical_error, log_traceback, logging
-
 from ayon_server.entities import ProjectEntity
 from ayon_server.helpers.deploy_project import create_project_from_anatomy
 from ayon_server.lib.postgres import Postgres
+from ayon_server.logging import critical_error, log_traceback, logger
 from ayon_server.settings.anatomy import Anatomy
 from ayon_server.settings.anatomy.tags import Tag
 from demogen.demogen import DemoGen
@@ -81,10 +80,10 @@ async def main() -> None:
     project_name = project_template["name"]
     project_hierarchy = project_template["hierarchy"]
 
-    logging.info("Connecting to database")
+    logger.info("Connecting to database")
     await Postgres.connect()
 
-    logging.info("Deleting old project if exists")
+    logger.info("Deleting old project if exists")
     await Postgres.execute(f"DROP SCHEMA IF EXISTS project_{project_name} CASCADE")
     await Postgres.execute("DELETE FROM projects WHERE name = $1", project_name)
 

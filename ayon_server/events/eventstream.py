@@ -2,11 +2,10 @@ from collections.abc import Awaitable, Callable
 from datetime import datetime
 from typing import Any
 
-from nxtools import logging
-
 from ayon_server.exceptions import ConstraintViolationException, NotFoundException
 from ayon_server.lib.postgres import Postgres
 from ayon_server.lib.redis import Redis
+from ayon_server.logging import logger
 from ayon_server.utils import SQLTool, json_dumps
 
 from .base import EventModel, EventStatus, create_id
@@ -199,7 +198,7 @@ class EventStream:
             try:
                 await handler(event)
             except Exception as e:
-                logging.debug(f"Error in event handler: {e}")
+                logger.debug(f"Error in event handler: {e}")
 
         return event.id
 

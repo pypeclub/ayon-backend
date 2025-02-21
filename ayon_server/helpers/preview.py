@@ -3,7 +3,6 @@ import os
 
 import aiofiles
 from fastapi import Response
-from nxtools import logging
 
 from ayon_server.api.files import image_response_from_bytes
 from ayon_server.exceptions import (
@@ -15,6 +14,7 @@ from ayon_server.files import Storages
 from ayon_server.helpers.mimetypes import is_image_mime_type, is_video_mime_type
 from ayon_server.lib.postgres import Postgres
 from ayon_server.lib.redis import Redis
+from ayon_server.logging import logger
 
 REDIS_NS = "project.file_preview"
 FILE_PREVIEW_SIZE = (600, None)
@@ -71,7 +71,7 @@ async def create_video_thumbnail(
                 ]
             )
 
-            logging.debug(" ".join(cmd))
+            logger.debug(" ".join(cmd))
             proc = await asyncio.create_subprocess_exec(
                 *cmd,
                 stderr=asyncio.subprocess.PIPE,
@@ -127,7 +127,7 @@ async def obtain_file_preview(project_name: str, file_id: str) -> bytes:
             raise NotFoundException("File not found")
 
         if os.path.getsize(path) != expected_size:
-            logging.warning(f"File size mismatch: {path}")
+            logger.warning(f"File size mismatch: {path}")
 
     elif storage.storage_type == "s3":
         path = await storage.get_signed_url(file_id)

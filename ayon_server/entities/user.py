@@ -4,8 +4,6 @@ import re
 from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING, Any, Optional
 
-from nxtools import logging
-
 from ayon_server.access.access_groups import AccessGroups
 from ayon_server.access.permissions import Permissions
 from ayon_server.auth.utils import (
@@ -26,6 +24,7 @@ from ayon_server.helpers.email import send_mail
 from ayon_server.helpers.project_list import get_project_list
 from ayon_server.lib.postgres import Connection, Postgres
 from ayon_server.lib.redis import Redis
+from ayon_server.logging import logger
 from ayon_server.types import AccessType
 from ayon_server.utils import SQLTool, dict_exclude
 
@@ -133,7 +132,7 @@ class UserEntity(TopLevelEntity):
             self.data.pop("userPool", None)
 
         if self.attrib.email and (self.attrib.email != self.original_email):
-            logging.info(f"Email changed for user {self.name}")
+            logger.info(f"Email changed for user {self.name}")
             # Email changed, we need to check if it's unique
             # We cannot use DB index here.
             res = await conn.fetch(
@@ -151,7 +150,7 @@ class UserEntity(TopLevelEntity):
                 raise ConstraintViolationException(msg)
 
         if do_con_check:
-            logging.info(f"Activating user {self.name}")
+            logger.info(f"Activating user {self.name}")
 
             if (max_users := await Constraints.check("maxActiveUsers")) is not None:
                 max_users = max_users or 1

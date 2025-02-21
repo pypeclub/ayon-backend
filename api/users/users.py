@@ -1,7 +1,6 @@
 from typing import Any
 
 from fastapi import Path
-from nxtools import logging
 
 from ayon_server.api.clientinfo import ClientInfo
 from ayon_server.api.dependencies import (
@@ -25,6 +24,7 @@ from ayon_server.exceptions import (
 )
 from ayon_server.helpers.rename_user import rename_user
 from ayon_server.lib.redis import Redis
+from ayon_server.logging import logger
 from ayon_server.types import USER_NAME_REGEX, Field, OPModel
 from ayon_server.utils import get_nickname, obscure
 
@@ -273,7 +273,7 @@ async def patch_user(
     await target_user.save()
 
     if avatar_changed:
-        logging.debug(f"User {user_name} avatar changed, updating cache")
+        logger.debug(f"User {user_name} avatar changed, updating cache")
         avatar_bytes = await obtain_avatar(user_name)
         await Redis.set(REDIS_NS, user_name, avatar_bytes)
 

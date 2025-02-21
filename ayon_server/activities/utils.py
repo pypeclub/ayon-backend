@@ -1,9 +1,8 @@
 import re
 from typing import Any, get_args
 
-from nxtools import logging
-
 from ayon_server.lib.postgres import Postgres
+from ayon_server.logging import logger
 
 from .models import ActivityReferenceModel, EntityLinkTuple, ReferencedEntityType
 
@@ -22,7 +21,7 @@ def extract_link_tuples(md_text: str) -> list[EntityLinkTuple]:
                 continue
             links.add((entity_type, entity_id))
         except ValueError:
-            logging.debug("Invalid reference link format")
+            logger.debug("Invalid reference link format")
     return list(links)
 
 

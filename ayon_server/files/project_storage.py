@@ -8,7 +8,6 @@ import aioshutil
 import httpx
 from fastapi import Request
 from fastapi.responses import RedirectResponse
-from nxtools import log_traceback, logging
 from typing_extensions import AsyncGenerator
 
 from ayon_server.api.files import handle_upload
@@ -30,6 +29,7 @@ from ayon_server.helpers.download import download_file
 from ayon_server.helpers.ffprobe import extract_media_info
 from ayon_server.helpers.project_list import ProjectListItem, get_project_info
 from ayon_server.lib.postgres import Postgres
+from ayon_server.logging import log_traceback, logger
 from ayon_server.models.file_info import FileInfo
 
 from .common import FileGroup, StorageType
@@ -189,8 +189,8 @@ class ProjectStorage:
                 raise ForbiddenException("Unauthorized instance")
 
             if res.status_code >= 400:
-                logging.error("CDN Error", res.status_code)
-                logging.error("CDN Error", res.text)
+                logger.error("CDN Error", res.status_code)
+                logger.error("CDN Error", res.text)
                 raise NotFoundException(f"Error {res.status_code} from CDN")
 
             data = res.json()
@@ -238,7 +238,7 @@ class ProjectStorage:
         Takes an incoming FastAPI request and saves the file to the
         project storage. Returns the number of bytes written.
         """
-        logging.debug(f"Uploading file {file_id} to {self} ({file_group})")
+        logger.debug(f"Uploading file {file_id} to {self} ({file_group})")
         path = await self.get_path(file_id, file_group=file_group)
         if self.storage_type == "local":
             return await handle_upload(request, path)
@@ -261,7 +261,7 @@ class ProjectStorage:
 
         Returns the number of bytes written.
         """
-        logging.debug(f"Uploading file {file_id} to {self} ({file_group}) from {url}")
+        logger.debug(f"Uploading file {file_id} to {self} ({file_group}) from {url}")
         path = await self.get_path(file_id, file_group=file_group)
         if self.storage_type == "local":
             return await download_file(
@@ -307,7 +307,7 @@ class ProjectStorage:
             except FileNotFoundError:
                 pass
             except Exception as e:
-                logging.error(f"Failed to delete file: {e}")
+                logger.error(f"Failed to delete file: {e}")
                 return False
 
             directory = os.path.dirname(path)
@@ -315,7 +315,7 @@ class ProjectStorage:
                 try:
                     os.rmdir(directory)
                 except Exception as e:
-                    logging.error(f"Failed to delete directory on {self}: {e}")
+                    logger.error(f"Failed to delete directory on {self}: {e}")
             return True
 
         elif self.storage_type == "s3":
@@ -323,7 +323,7 @@ class ProjectStorage:
             try:
                 await delete_s3_file(self, path)
             except Exception as e:
-                logging.error(f"Failed to delete file: {e}")
+                logger.error(f"Failed to delete file: {e}")
                 return False
             return True
         else:
@@ -383,7 +383,7 @@ class ProjectStorage:
         """
 
         async for row in Postgres.iterate(query):
-            logging.debug(f"Deleting unused file {row['id']} from {self}")
+            logger.debug(f"Deleting unused file {row['id']} from {self}")
             try:
                 await self.delete_file(row["id"])
             except Exception:
@@ -412,7 +412,7 @@ class ProjectStorage:
 
     async def store_thumbnail(self, thumbnail_id: str, payload: bytes) -> None:
         """Store the thumbnail image in the storage."""
-        logging.debug(f"Storing thumbnail {thumbnail_id} to {self}")
+        logger.debug(f"Storing thumbnail {thumbnail_id} to {self}")
         path = await self.get_path(thumbnail_id, file_group="thumbnails")
         if self.storage_type == "local":
             directory, _ = os.path.split(path)
@@ -453,7 +453,7 @@ class ProjectStorage:
 
         Fail silently if the thumbnail is not found.
         """
-        logging.debug(f"Deleting thumbnail {thumbnail_id} from {self}")
+        logger.debug(f"Deleting thumbnail {thumbnail_id} from {self}")
         await self.unlink(thumbnail_id, file_group="thumbnails")
 
     # Trash project storage
@@ -466,7 +466,7 @@ class ProjectStorage:
         """Mark the project storage for deletion"""
 
         if self.storage_type == "local":
-            logging.debug(f"Trashing project {self.project_name} storage")
+            logger.debug(f"Trashing project {self.project_name} storage")
             projects_root = await self.get_root()
             project_dir = os.path.join(projects_root, self.project_name)
             if not os.path.isdir(project_dir):
@@ -478,7 +478,7 @@ class ProjectStorage:
             try:
                 os.rename(project_dir, new_dir)
             except Exception as e:
-                logging.error(
+                logger.error(
                     f"Failed to trash project {self.project_name} storage: {e}"
                 )
         if self.storage_type == "s3":

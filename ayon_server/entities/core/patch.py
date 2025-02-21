@@ -2,8 +2,9 @@ import copy
 from datetime import datetime
 from typing import Any
 
-from nxtools import logging
 from pydantic import BaseModel
+
+from ayon_server.logging import logger
 
 
 def apply_patch(original: BaseModel, patch: BaseModel) -> BaseModel:
@@ -34,7 +35,7 @@ def apply_patch(original: BaseModel, patch: BaseModel) -> BaseModel:
                         new_dict[dkey] = dval
                 update_data[key] = new_dict
             else:
-                logging.error(f"Unable to patch. {key} only accepts dict")
+                logger.error(f"Unable to patch. {key} only accepts dict")
 
         else:
             # Patch scalar types such as ints, strings and booleans

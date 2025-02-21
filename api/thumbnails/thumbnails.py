@@ -2,7 +2,6 @@ from typing import Any, Literal
 
 import aiocache
 from fastapi import APIRouter, Query, Request, Response
-from nxtools import logging
 
 from ayon_server.api.dependencies import (
     CurrentUser,
@@ -27,6 +26,7 @@ from ayon_server.exceptions import (
 from ayon_server.files import Storages
 from ayon_server.helpers.thumbnails import get_fake_thumbnail, store_thumbnail
 from ayon_server.lib.postgres import Postgres
+from ayon_server.logging import logger
 from ayon_server.types import Field, OPModel
 from ayon_server.utils import EntityID
 
@@ -49,7 +49,7 @@ async def body_from_request(request: Request) -> bytes:
     result = b""
     async for chunk in request.stream():
         result += chunk
-    logging.debug(f"Received thumbnail payload of {len(result)} bytes")
+    logger.debug(f"Received thumbnail payload of {len(result)} bytes")
     return result
 
 

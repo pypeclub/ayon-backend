@@ -1,6 +1,5 @@
-from nxtools import logging
-
 from ayon_server.lib.postgres import Postgres
+from ayon_server.logging import logger
 from maintenance.maintenance_task import ProjectMaintenanceTask
 
 
@@ -75,7 +74,7 @@ async def clear_activities(project_name: str) -> None:
         count = res[0]["deleted"]
 
         if count:
-            logging.debug(
+            logger.debug(
                 f"Deleted {count} orphaned "
                 f"{entity_type} activities from {project_name}"
             )

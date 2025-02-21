@@ -1,10 +1,9 @@
 import time
 from typing import Any
 
-from nxtools import logging
-
 from ayon_server.lib.postgres import Connection, Postgres
 from ayon_server.lib.redis import Redis
+from ayon_server.logging import logger
 from ayon_server.utils import json_dumps
 
 
@@ -67,7 +66,7 @@ async def rebuild_hierarchy_cache(
 
     await Redis.set("project.folders", project_name, json_dumps(result), 3600)
     elapsed_time = time.monotonic() - start_time
-    logging.debug(
+    logger.debug(
         f"Rebuilt hierarchy cache for {project_name} "
         f"with {len(result)} folders "
         f"in {elapsed_time:.2f} s"

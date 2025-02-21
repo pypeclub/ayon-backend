@@ -12,12 +12,12 @@ import aiofiles
 import httpx
 import semver
 import yaml
-from nxtools import log_traceback, logging
 from pydantic import BaseModel
 
 from ayon_server.config import ayonconfig
 from ayon_server.events import EventStream
 from ayon_server.exceptions import AyonException
+from ayon_server.logging import log_traceback, logger
 from ayon_server.version import __version__ as ayon_version
 
 
@@ -147,7 +147,7 @@ def unpack_addon_sync(zip_info: AddonZipInfo) -> None:
                     os.chmod(extracted_path, original_mode)
 
         if os.path.isdir(target_dir):
-            logging.info(f"Removing existing addon {zip_info.name} {zip_info.version}")
+            logger.info(f"Removing existing addon {zip_info.name} {zip_info.version}")
             shutil.rmtree(target_dir)
 
         # move the extracted files to the target directory
@@ -195,7 +195,7 @@ async def unpack_addon(event_id: str, zip_info: AddonZipInfo):
             task = loop.run_in_executor(executor, unpack_addon_sync, zip_info)
             await asyncio.gather(task)
     except Exception as e:
-        logging.error(f"Error while unpacking addon: {e}")
+        logger.error(f"Error while unpacking addon: {e}")
         await EventStream.update(
             event_id,
             description=f"Error while unpacking addon: {e}",
@@ -205,7 +205,7 @@ async def unpack_addon(event_id: str, zip_info: AddonZipInfo):
     try:
         os.remove(zip_path)
     except Exception as e:
-        logging.error(f"Error while removing zip file: {e}")
+        logger.error(f"Error while removing zip file: {e}")
 
     await EventStream.update(
         event_id,

@@ -1,6 +1,5 @@
-from nxtools import logging
-
 from ayon_server.lib.postgres import Connection, Postgres
+from ayon_server.logging import logger
 from ayon_server.types import ProjectLevelEntityType
 
 
@@ -32,7 +31,7 @@ async def remove_entity_links(
         res = await conn.fetch(query, entity_id)
         print(query, res)
         if res and res[0]["count"] > 0:
-            logging.debug(
+            logger.debug(
                 f"Removed {res[0]['count']} links of {entity_type} {entity_id}"
             )
 
@@ -91,4 +90,4 @@ async def remove_dead_links(project_name: str) -> None:
             count += res[0]["count"]
 
     if count > 0:
-        logging.info(f"Removed {count} dead links")
+        logger.info(f"Removed {count} dead links")

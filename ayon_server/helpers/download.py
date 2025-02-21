@@ -5,9 +5,9 @@ from collections.abc import Awaitable, Callable
 
 import aiofiles
 import httpx
-from nxtools import logging
 
 from ayon_server.config import ayonconfig
+from ayon_server.logging import logger
 from ayon_server.models.file_info import FileInfo
 
 
@@ -90,7 +90,7 @@ async def download_file(
         except Exception as e:
             # Log the error and continue
             # It should not affect the download process
-            logging.debug(f"Error in download progress handler: {e}")
+            logger.debug(f"Error in download progress handler: {e}")
 
     i = 0
 
@@ -141,7 +141,7 @@ async def download_file(
                 file_size = int(response.headers.get("content-length", 0))
 
                 short_url = shorten_string(url, 50)
-                logging.debug(f"Downloading {short_url} to {target_path}")
+                logger.debug(f"Downloading {short_url} to {target_path}")
 
                 async with aiofiles.open(temp_file_path, "wb") as f:
                     async for chunk in response.aiter_bytes():
@@ -157,5 +157,5 @@ async def download_file(
 
     finally:
         if os.path.exists(temp_file_path):
-            logging.debug(f"Removing temporary file: {temp_file_path}")
+            logger.debug(f"Removing temporary file: {temp_file_path}")
             os.remove(temp_file_path)

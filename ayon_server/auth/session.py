@@ -6,7 +6,6 @@ from collections.abc import AsyncGenerator
 from typing import Any
 
 from fastapi import Request
-from nxtools import logging
 
 from ayon_server.api.clientinfo import ClientInfo, get_client_info, get_real_ip
 from ayon_server.config import ayonconfig
@@ -15,6 +14,7 @@ from ayon_server.events import EventStream
 from ayon_server.exceptions import UnauthorizedException
 from ayon_server.helpers.auth_utils import AuthUtils
 from ayon_server.lib.redis import Redis
+from ayon_server.logging import logger
 from ayon_server.types import OPModel
 from ayon_server.utils import create_hash, json_dumps, json_loads
 
@@ -231,7 +231,7 @@ class Session:
             await cls.delete(session.token, message=msg)
 
             msg += f" ({user_name} {session.token})"
-            logging.debug(msg)
+            logger.debug(msg)
 
     @classmethod
     async def logout_user(cls, user_name: str) -> None:

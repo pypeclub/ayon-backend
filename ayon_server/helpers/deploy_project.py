@@ -2,13 +2,12 @@ import time
 from collections import defaultdict
 from typing import Any
 
-from nxtools import logging
-
 from ayon_server.auth.session import Session
 from ayon_server.entities import ProjectEntity, UserEntity
 from ayon_server.entities.models.submodels import LinkTypeModel
 from ayon_server.events import EventStream
 from ayon_server.lib.postgres import Postgres
+from ayon_server.logging import logger
 from ayon_server.settings.anatomy import Anatomy
 
 
@@ -125,7 +124,7 @@ async def assign_default_users_to_project(project_name: str, conn) -> None:
 
         # TODO: consider dispatching an event with this information as
         # it could be used to notify the user.
-        logging.debug(f"Added user {row['name']} to project {project_name}")
+        logger.debug(f"Added user {row['name']} to project {project_name}")
 
 
 async def create_project_from_anatomy(
@@ -173,7 +172,7 @@ async def create_project_from_anatomy(
             await assign_default_users_to_project(project.name, conn)
 
     end_time = time.monotonic()
-    logging.debug(f"Deployed project {project.name} in {end_time - start_time:.2f}s")
+    logger.debug(f"Deployed project {project.name} in {end_time - start_time:.2f}s")
 
     await EventStream.dispatch(
         "entity.project.created",

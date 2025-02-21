@@ -1,7 +1,5 @@
 import asyncio
 
-from nxtools import log_traceback, logging
-
 from ayon_server.api.system import require_server_restart
 from ayon_server.background.background_worker import BackgroundWorker
 from ayon_server.events import EventStream
@@ -9,6 +7,7 @@ from ayon_server.installer.addons import install_addon_from_url, unpack_addon
 from ayon_server.installer.dependency_packages import download_dependency_package
 from ayon_server.installer.installers import download_installer
 from ayon_server.lib.postgres import Postgres
+from ayon_server.logging import log_traceback, logger
 
 from .addons import AddonZipInfo
 
@@ -38,7 +37,7 @@ class BackgroundInstaller(BackgroundWorker):
         self.restart_needed: bool = False
 
     async def enqueue(self, event_id: str) -> None:
-        logging.debug(f"Background installer: enqueuing event {event_id}")
+        logger.debug(f"Background installer: enqueuing event {event_id}")
         await self.event_queue.put(event_id)
 
     async def process_event(self, event_id: str) -> None:
@@ -51,13 +50,13 @@ class BackgroundInstaller(BackgroundWorker):
             return
 
         if res[0]["status"] == "failed" and res[0]["retries"] > 3:
-            logging.error(f"Event {event_id} failed too many times")
+            logger.error(f"Event {event_id} failed too many times")
             raise TooManyRetries()
 
         topic = res[0]["topic"]
         summary = res[0]["summary"]
 
-        logging.info(f"Background installer: processing {topic} event: {event_id}")
+        logger.info(f"Background installer: processing {topic} event: {event_id}")
 
         if topic == "addon.install":
             await unpack_addon(
@@ -76,7 +75,7 @@ class BackgroundInstaller(BackgroundWorker):
         elif topic == "installer.install_from_url":
             await download_installer(event_id, summary["url"])
 
-        logging.info(
+        logger.info(
             f"Background installer: finished processing {topic} event: {event_id}"
         )
 

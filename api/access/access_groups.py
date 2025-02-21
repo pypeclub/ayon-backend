@@ -1,7 +1,6 @@
 import copy
 
 from fastapi import BackgroundTasks, Body
-from nxtools import log_traceback
 
 from ayon_server.access.access_groups import AccessGroups
 from ayon_server.access.permissions import Permissions
@@ -17,6 +16,7 @@ from ayon_server.exceptions import (
     NotFoundException,
 )
 from ayon_server.lib.postgres import Postgres
+from ayon_server.logging import log_traceback
 from ayon_server.settings.postprocess import postprocess_settings_schema
 from ayon_server.types import Field, OPModel
 

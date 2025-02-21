@@ -1,9 +1,8 @@
 from typing import Any
 
-from nxtools import logging
-
 from ayon_server.auth.utils import create_password, hash_password
 from ayon_server.lib.postgres import Postgres
+from ayon_server.logging import logger
 
 
 async def deploy_users(
@@ -28,16 +27,16 @@ async def deploy_users(
                 data[key] = user[key]
 
         if "password" in user:
-            logging.debug(f"Creating password for user {name}")
+            logger.debug(f"Creating password for user {name}")
             data["password"] = create_password(user["password"])
 
         if "hashedPassword" in user:
-            logging.debug(f"Adding password for user {name}")
+            logger.debug(f"Adding password for user {name}")
             data["password"] = user["hashedPassword"]
 
         if "apiKey" in user:
             api_key = user["apiKey"]
-            logging.debug(f"Creating api key for user {name}")
+            logger.debug(f"Creating api key for user {name}")
             api_key_preview = api_key[:4] + "***" + api_key[-4:]
             data["apiKey"] = hash_password(api_key)
             data["apiKeyPreview"] = api_key_preview
@@ -61,10 +60,10 @@ async def deploy_users(
 
         res = await Postgres.fetch("SELECT * FROM users WHERE name = $1", name)
         if res and not user.get("forceUpdate"):
-            logging.info(f"{user['name']} already exists. skipping")
+            logger.info(f"{user['name']} already exists. skipping")
             continue
 
-        logging.info(f"Saving user {user['name']}")
+        logger.info(f"Saving user {user['name']}")
         await Postgres.execute(
             """
             INSERT INTO public.users (name, active, attrib, data)

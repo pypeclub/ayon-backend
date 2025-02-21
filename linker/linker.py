@@ -1,8 +1,7 @@
 from typing import Any
 
-from nxtools import logging
-
 from ayon_server.lib.postgres import Postgres
+from ayon_server.logging import logger
 from ayon_server.utils import EntityID
 from linker.query import query_entities
 
@@ -20,7 +19,7 @@ async def create_link(
     link_id = EntityID.create()
 
     if DEBUG:
-        logging.debug(
+        logger.debug(
             f"Creating {link_type_name} link between "
             f"{input_type} {input_id} and "
             f"{output_type} {output_id}"
@@ -44,7 +43,7 @@ async def make_links(
     project_name: str,
     link_type_config: dict[str, Any],
 ) -> None:
-    logging.info(f"Creating links in project {project_name}")
+    logger.info(f"Creating links in project {project_name}")
     link_type = link_type_config["link_type"]
     link_type_name, input_type, output_type = link_type.split("|")
 
@@ -76,4 +75,4 @@ async def make_links(
                 author="martas",
             )
             count += 1
-    logging.goodnews(f"Created {count} {link_type} links for project {project_name}")
+    logger.info(f"Created {count} {link_type} links for project {project_name}")

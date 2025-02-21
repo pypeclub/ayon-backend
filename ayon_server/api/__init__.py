@@ -8,8 +8,8 @@
 from typing import Annotated, Any
 
 from fastapi import Cookie, Depends, Header, Path, Query, Request
-from nxtools import logging
 
+from ayon_server.logging import logger
 from ayon_server.types import API_KEY_REGEX, PROJECT_NAME_REGEX, USER_NAME_REGEX
 from ayon_server.utils import EntityID, parse_access_token, parse_api_key
 
@@ -63,7 +63,7 @@ async def dep_current_user(
 ) -> Any:
     from .dependencies import dep_current_user
 
-    logging.warning("Using deprecated dep_current_user")
+    logger.warning("Using deprecated dep_current_user")
     return await dep_current_user(request, x_as_user, x_api_key, access_token, api_key)
 
 
@@ -72,7 +72,7 @@ async def dep_project_name(
 ):
     from .dependencies import dep_project_name
 
-    logging.warning("Using deprecated dep_project_name")
+    logger.warning("Using deprecated dep_project_name")
     return await dep_project_name(project_name)
 
 
@@ -80,5 +80,5 @@ async def dep_representation_id(
     representation_id: str = Path(..., title="Version ID", **EntityID.META),
 ) -> str:
     """Validate and return a representation id specified in an endpoint path."""
-    logging.warning("Using deprecated dep_representation_id")
+    logger.warning("Using deprecated dep_representation_id")
     return representation_id

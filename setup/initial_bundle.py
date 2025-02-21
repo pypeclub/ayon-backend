@@ -1,10 +1,9 @@
 from typing import Any
 
-from nxtools import logging
-
 from ayon_server.events import EventStream
 from ayon_server.installer.addons import install_addon_from_url
 from ayon_server.lib.postgres import Postgres
+from ayon_server.logging import logger
 
 
 async def create_initial_bundle(bundle_data: dict[str, Any]):
@@ -41,12 +40,12 @@ async def create_initial_bundle(bundle_data: dict[str, Any]):
     TODO: Allow installing Launchers and dependency packages as well.
     """
 
-    logging.debug("Checking for bundles")
+    logger.debug("Checking for bundles")
     res = await Postgres.fetch("SELECT name FROM bundles LIMIT 1")
     if res:
         return
 
-    logging.info("Creating initial bundle")
+    logger.info("Creating initial bundle")
     addons = bundle_data.get("addons", [])
     bundle_addons = {}
 
@@ -66,7 +65,7 @@ async def create_initial_bundle(bundle_data: dict[str, Any]):
             # and finishes immediately. BackgroundInstaller doesn't
             # run at this point.
 
-            logging.info(f"Installing addon {log_name}")
+            logger.info(f"Installing addon {log_name}")
             event_id = await EventStream.dispatch(
                 "addon.install_from_url",
                 description="Installing addon from URL",
@@ -81,7 +80,7 @@ async def create_initial_bundle(bundle_data: dict[str, Any]):
             bundle_addons[addon_name] = addon_version
 
     if not bundle_addons:
-        logging.warning("No addons provided for the initial bundle")
+        logger.warning("No addons provided for the initial bundle")
         return
 
     bundle_name = bundle_data.get("name", "InitialBundle")
@@ -92,7 +91,7 @@ async def create_initial_bundle(bundle_data: dict[str, Any]):
     }
 
     async with Postgres.acquire() as conn, conn.transaction():
-        logging.info(f"Creating initial bundle '{bundle_name}'")
+        logger.info(f"Creating initial bundle '{bundle_name}'")
         await Postgres.execute("UPDATE bundles SET is_production = FALSE")
 
         query = """

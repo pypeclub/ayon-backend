@@ -1,8 +1,6 @@
 import datetime
 from typing import Annotated
 
-from nxtools import slugify
-
 from ayon_server.constraints import Constraints
 from ayon_server.graphql.connections import EventsConnection
 from ayon_server.graphql.edges import EventEdge
@@ -24,7 +22,7 @@ from ayon_server.types import (
     validate_topic_list,
     validate_user_name_list,
 )
-from ayon_server.utils import SQLTool
+from ayon_server.utils import SQLTool, slugify
 
 
 async def get_events(

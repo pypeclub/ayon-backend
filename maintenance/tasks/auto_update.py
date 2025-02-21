@@ -1,7 +1,6 @@
 import time
 
 import httpx
-from nxtools import logging
 
 from ayon_server.addons.library import AddonLibrary
 from ayon_server.config import ayonconfig
@@ -11,6 +10,7 @@ from ayon_server.helpers.download_addon import download_addon
 from ayon_server.helpers.get_downloaded_addons import get_downloaded_addons
 from ayon_server.helpers.migrate_addon_settings import migrate_addon_settings
 from ayon_server.lib.postgres import Postgres
+from ayon_server.logging import logger
 from ayon_server.version import __version__ as ayon_version
 from maintenance.maintenance_task import StudioMaintenanceTask
 
@@ -25,7 +25,7 @@ async def get_required_addons() -> list[dict[str, str]]:
             data = response.json()
             return data.get("requiredAddons", [])
     except Exception:
-        logging.debug("Failed to fetch required addons list")
+        logger.debug("Failed to fetch required addons list")
         return []
 
 
@@ -61,7 +61,7 @@ async def run_auto_update() -> None:
             try:
                 url = await get_download_url(addon_name, addon_version)
             except Exception:
-                logging.debug(
+                logger.debug(
                     f"Failed to get download URL for {addon_name} {addon_version}"
                 )
                 continue
@@ -89,7 +89,7 @@ async def run_auto_update() -> None:
             # Addon is active and in production we don't need to do anything
             continue
 
-        logging.debug(
+        logger.debug(
             f"Required addon {addon_name} {addon_version} is not in production"
         )
 
@@ -99,7 +99,7 @@ async def run_auto_update() -> None:
         if production_addon is not None:
             # There is a different version of the addon in production
 
-            logging.debug(
+            logger.debug(
                 f"Migrating {addon_name} settings "
                 f" from {addon_version} to {production_addon.version}"
             )
@@ -127,7 +127,7 @@ async def run_auto_update() -> None:
         await Postgres.execute(q, data, production_bundle["name"])
 
         for addon_name, addon_version in bundle_addons_patch.items():
-            logging.info(f"Updated production bundle with {addon_name} {addon_version}")
+            logger.info(f"Updated production bundle with {addon_name} {addon_version}")
 
     else:
         ts = int(time.time())
@@ -141,7 +141,7 @@ async def run_auto_update() -> None:
         await Postgres.execute(q, bundle_name, bundle_data)
 
         for addon_name, addon_version in bundle_addons_patch.items():
-            logging.info(f"Created production bundle with {addon_name} {addon_version}")
+            logger.info(f"Created production bundle with {addon_name} {addon_version}")
 
 
 class AutoUpdate(StudioMaintenanceTask):

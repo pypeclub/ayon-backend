@@ -1,11 +1,11 @@
 from fastapi import Response
-from nxtools import logging
 
 from ayon_server.api.dependencies import CurrentUser
 from ayon_server.api.system import clear_server_restart_required, require_server_restart
 from ayon_server.events import EventStream
 from ayon_server.exceptions import ForbiddenException
 from ayon_server.lib.postgres import Postgres
+from ayon_server.logging import logger
 from ayon_server.types import Field, OPModel
 
 from . import frontend_modules, info, metrics, secrets, sites
@@ -28,7 +28,7 @@ async def request_server_restart(user: CurrentUser):
     if user.is_guest:
         raise ForbiddenException("Guests cannot restart the server")
 
-    logging.info(f"{user.name} requested server restart", user=user.name)
+    logger.info(f"{user.name} requested server restart", user=user.name)
     await EventStream.dispatch("server.restart_requested", user=user.name)
     return Response(status_code=204)
 

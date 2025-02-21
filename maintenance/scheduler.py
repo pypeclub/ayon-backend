@@ -1,9 +1,8 @@
 import asyncio
 import datetime
 
-from nxtools import log_traceback, logging
-
 from ayon_server.config import ayonconfig
+from ayon_server.logging import log_traceback, logger
 from maintenance.maintenance import run_maintenance
 
 
@@ -24,7 +23,7 @@ class MaintenanceScheduler:
 
             # Wait until the next run time
             wait_time = int((next_run - now).total_seconds())
-            logging.debug(f"Scheduled maintenance in {wait_time} seconds.")
+            logger.debug(f"Scheduled maintenance in {wait_time} seconds.")
             await asyncio.sleep(wait_time)
 
             # Execute the maintenance task
@@ -50,7 +49,7 @@ class MaintenanceScheduler:
 
     async def run_maintenance(self):
         if self.is_running:
-            logging.warning("Maintenance task is already running.")
+            logger.warning("Maintenance task is already running.")
             return
         self.is_running = True
         try:
