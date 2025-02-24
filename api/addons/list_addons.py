@@ -42,6 +42,9 @@ class AddonListItem(OPModel):
         ..., description="Type of the addon"
     )
     system: bool | None = Field(None, description="Is the addon a system addon?")
+    allow_project_override: bool | None = Field(
+        None, description="Allow project override"
+    )
 
 
 class AddonList(OPModel):
@@ -114,6 +117,7 @@ async def list_addons(
                 system=is_system or None,
                 staging_version=vers.get("staging"),
                 addon_type=addon.addon_type,
+                allow_project_override=definition.allow_project_override,
             )
         )
     result.sort(key=lambda x: x.name)

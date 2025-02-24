@@ -28,7 +28,7 @@ class ServerAddonDefinition:
             return
 
         for version in self.versions.values():
-            if self.app_host_name is None:
+            if self.app_host_name is None and version.app_host_name:
                 self.app_host_name = version.app_host_name
 
             if version.name != self.name:
@@ -38,6 +38,11 @@ class ServerAddonDefinition:
                 )
 
             self.title = version.title  # Use the latest title
+
+    @property
+    def allow_project_override(self) -> bool:
+        # TODO: Add actual logic here
+        return any(version.app_host_name for version in self.versions.values())
 
     @property
     def dir_name(self) -> str:

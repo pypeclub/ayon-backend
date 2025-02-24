@@ -31,6 +31,7 @@ METADATA_KEYS = [
     "version",
     "title",
     "services",
+    "app_host_name",
     # compatibility object
     "ayon_server_version",
     "ayon_launcher_version",

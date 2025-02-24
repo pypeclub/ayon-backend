@@ -180,6 +180,14 @@ async def create_new_bundle(
                 if addon_definition.latest:
                     bundle.addons[system_addon_name] = addon_definition.latest.version
 
+    if bundle.is_project:
+        for addon_name in list(bundle.addons.keys()):
+            addon_definition = AddonLibrary.get(addon_name)
+            if addon_definition is None:
+                raise BadRequestException(f"Addon {addon_name} does not exist")
+            if not addon_definition.allow_project_override:
+                bundle.addons.pop(addon_name)
+
     async with Postgres.acquire() as conn, conn.transaction():
         await _create_new_bundle(
             conn,
@@ -316,6 +324,7 @@ async def update_bundle(
             "addons": bundle.addons,
             "dependency_packages": bundle.dependency_packages,
             "installer_version": bundle.installer_version,
+            "is_project": bundle.is_project,
         }
         if bundle.is_dev:
             data["addon_development"] = {
@@ -373,6 +382,7 @@ async def update_bundle(
             "isStaging": bundle.is_staging,
             "isArchived": bundle.is_archived,
             "isDev": bundle.is_dev,
+            "isProject": bundle.is_project,
         },
         payload=data,
     )
