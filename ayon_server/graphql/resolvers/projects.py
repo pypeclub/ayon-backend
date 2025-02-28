@@ -60,7 +60,7 @@ async def get_projects(
         "updated_at",
     ]
 
-    if fields.has_any("data"):
+    if fields.has_any("data", "projectBundle"):
         cols.append("data")
 
     #

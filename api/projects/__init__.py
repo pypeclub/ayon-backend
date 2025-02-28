@@ -1,4 +1,13 @@
-__all__ = ["router", "anatomy", "deploy", "list_projects", "projects", "roots", "users"]
+__all__ = [
+    "router",
+    "anatomy",
+    "bundle",
+    "deploy",
+    "list_projects",
+    "projects",
+    "roots",
+    "users",
+]
 
-from . import anatomy, deploy, list_projects, projects, roots, users
+from . import anatomy, bundle, deploy, list_projects, projects, roots, users
 from .router import router

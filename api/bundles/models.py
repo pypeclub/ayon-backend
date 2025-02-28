@@ -68,6 +68,7 @@ class BundleModel(BaseBundleModel):
     is_staging: bool = Field(False, example=False)
     is_archived: bool = Field(False, example=False)
     is_dev: bool = Field(False, example=False)
+    is_project: bool = Field(False, example=False)
     active_user: str | None = Field(None, example="admin")
 
 

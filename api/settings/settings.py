@@ -47,6 +47,11 @@ class AddonSettingsItemModel(OPModel):
 class AllSettingsResponseModel(OPModel):
     bundle_name: str = Field(..., regex=NAME_REGEX)
     addons: list[AddonSettingsItemModel] = Field(default_factory=list)
+    inherited_addons: list[str] = Field(
+        default_factory=list,
+        description="In the case of project bundle, list of addons "
+        "that are inherited from the studio bundle",
+    )
 
 
 @router.get("/settings", response_model_exclude_none=True)
@@ -68,6 +73,22 @@ async def get_all_settings(
     variant: str = Query("production"),
     summary: bool = Query(False, title="Summary", description="Summary mode"),
 ) -> AllSettingsResponseModel:
+    has_project_bundle_override = False
+    if project_name and (not bundle_name) and variant in ("production", "staging"):
+        # get project bundle overrides
+
+        r = await Postgres.fetch(
+            "SELECT data->'bundle' as bundle FROM projects WHERE name = $1",
+            project_name,
+        )
+        if not r:
+            raise NotFoundException(status_code=404, detail="Project not found")
+        try:
+            bundle_name = r[0]["bundle"][variant]
+            has_project_bundle_override = True
+        except Exception:
+            pass  # no bundle override, we don't care
+
     if variant not in ("production", "staging"):
         query = [
             """
@@ -97,7 +118,38 @@ async def get_all_settings(
         raise NotFoundException(status_code=404, detail="Bundle not found")
 
     bundle_name = brow[0]["name"]
-    addons = brow[0]["addons"]
+    addons: dict[str, str] = brow[0]["addons"]  # {addon_name: addon_version}
+
+    inherited_addons: list[str] = []
+    if has_project_bundle_override:
+        # if project has bundle override, merge it with the studio bundle
+        logger.debug("got project bundle. loading studio")
+        r = await Postgres.fetch(
+            f"""
+            SELECT name, is_production, is_staging, data->'addons' as addons
+            FROM bundles WHERE is_{variant} IS TRUE
+            """
+        )
+        if not r:
+            raise NotFoundException(
+                status_code=404,
+                detail="Unable to load project bundle. "
+                f"Studio {variant} bundle is not set",
+            )
+        studio_addons = r[0]["addons"]
+        logger.debug(f"Studio addons: {studio_addons}")
+        for addon_name, addon_version in studio_addons.items():
+            studio_addon_definition = AddonLibrary.get(addon_name)
+            if studio_addon_definition is None:
+                logger.debug(f"cannot find addon {addon_name}")
+                continue
+            if studio_addon_definition.project_can_override_addon_version:
+                logger.debug(
+                    f"addon {addon_name} is allowed to override project bundle"
+                )
+                continue
+            addons[addon_name] = addon_version
+            inherited_addons.append(addon_name)
 
     addon_result = []
     for addon_name, addon_version in addons.items():
@@ -212,7 +264,9 @@ async def get_all_settings(
                 has_project_overrides=settings._has_project_overrides
                 if settings
                 else None,
-                has_site_overrides=settings._has_site_overrides if settings else None,
+                has_project_site_overrides=settings._has_site_overrides
+                if settings
+                else None,
                 settings=settings.dict() if (settings and not summary) else {},
                 site_settings=site_settings,
             )
@@ -220,7 +274,13 @@ async def get_all_settings(
 
     addon_result.sort(key=lambda x: x.title.lower())
 
+    assert (
+        bundle_name is not None
+    ), "Bundle name is None"  # won't happen, shut up pyright
+
+    logger.debug(f"Inherited addons: {inherited_addons}")
     return AllSettingsResponseModel(
         bundle_name=bundle_name,
         addons=addon_result,
+        inherited_addons=inherited_addons,
     )
