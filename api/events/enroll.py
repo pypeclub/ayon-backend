@@ -3,7 +3,7 @@ import time
 
 from fastapi import Request
 
-from ayon_server.api.dependencies import CurrentUser, Sender, SenderType
+from ayon_server.api.dependencies import CurrentUser, NoTraces, Sender, SenderType
 from ayon_server.api.responses import EmptyResponse
 from ayon_server.events.enroll import EnrollResponseModel, enroll_job
 from ayon_server.exceptions import (
@@ -94,7 +94,7 @@ def validate_source_topic(value: str) -> str:
 
 
 # response model must be here
-@router.post("/enroll", response_model=EnrollResponseModel)
+@router.post("/enroll", response_model=EnrollResponseModel, dependencies=[NoTraces])
 async def enroll(
     request: Request,
     payload: EnrollRequestModel,

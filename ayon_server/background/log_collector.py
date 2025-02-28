@@ -33,12 +33,15 @@ class LogCollector(BackgroundWorker):
         description = record["message"].splitlines()[0].strip()
 
         extra = dict(record["extra"])
-        extra["file"] = record["file"].path
-        extra["function"] = record["function"]
-        extra["line"] = record["line"]
+        extra["module"] = record["name"]
 
+        # Store user and project separately
         user = extra.pop("user", None)
         project = record.pop("project", None)
+
+        if extra.pop("nodb", False):
+            # Used by the API middleware to avoid writing to the database
+            return
         self.queue.put(
             {
                 "topic": topic,

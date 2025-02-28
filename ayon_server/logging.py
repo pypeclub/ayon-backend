@@ -9,6 +9,8 @@ from loguru import logger
 from ayon_server.config import ayonconfig
 from ayon_server.utils import indent, json_dumps
 
+CONTEXT_KEY_BLACKLIST = {"nodb"}
+
 
 def _write_stderr(message: str) -> None:
     print(message, file=sys.stderr, flush=True)
@@ -16,29 +18,46 @@ def _write_stderr(message: str) -> None:
 
 def _serializer(message) -> None:
     record = message.record
+    level = record["level"].name
+    message = record["message"]
+    module = record["name"]
 
     if ayonconfig.log_mode == "json":
-        tr = {
-            "file": record["file"].path,
-            "line": record["line"],
-            "function": record["function"],
-        }
-        simplified = {
+        #
+        # JSON mode logging
+        #
+
+        payload = {
             "timestamp": time.time(),
-            "level": record["level"].name.lower(),
-            "message": record["message"],
-            **tr,
+            "level": level.lower(),
+            "message": message,
+            "module": module,
             **record["extra"],
         }
-        serialized = json_dumps(simplified)
+        serialized = json_dumps(payload)
         _write_stderr(serialized)
 
     else:
-        level = record["level"].name
-        message = record["message"]
-        module = record["name"]
-        formatted = f"{level:<8} | {module:<25} | {message}"
+        #
+        # Text mode logging
+        #
+
+        module = module.replace("ayon_server.", "")
+        formatted = f"{level:<7} {module:<26} | {message}"
         _write_stderr(formatted)
+
+        # Format the message according to the log context setting
+        if ayonconfig.log_context:
+            # Put the module name and extra context info in a separate block
+            contextual_info = ""
+            for k, v in record["extra"].items():
+                if k in CONTEXT_KEY_BLACKLIST:
+                    continue
+                contextual_info += f"{k}: {v}\n"
+            if contextual_info:
+                _write_stderr(indent(contextual_info))
+
+        # Print traceback if available
         if tb := record.get("traceback"):
             _write_stderr(indent(str(tb)))
 

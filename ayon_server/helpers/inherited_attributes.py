@@ -99,4 +99,4 @@ async def rebuild_inherited_attributes(
         await _rebuild_in_transaction(project_name, project_attrib, transaction)
 
     elapsed = time.monotonic() - start
-    logger.debug(f"Rebuilt inherited attributes for {project_name} in {elapsed:.2f}s")
+    logger.trace(f"Rebuilt inherited attributes for {project_name} in {elapsed:.2f}s")

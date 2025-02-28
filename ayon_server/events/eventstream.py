@@ -193,12 +193,19 @@ class EventStream:
             )
         )
 
+        if not event.topic.startswith("log."):
+            logger.debug(
+                f"Event dispatched [{event.topic}]: {event.description}",
+                event_id=event.id,
+                nodb=True,
+            )
+
         handlers = cls.local_hooks.get(event.topic, {}).values()
         for handler in handlers:
             try:
                 await handler(event)
             except Exception as e:
-                logger.debug(f"Error in event handler: {e}")
+                logger.warning(f"Error in event handler: {e}")
 
         return event.id
 
@@ -289,6 +296,12 @@ class EventStream:
             if progress is not None:
                 message["progress"] = progress
             await Redis.publish(json_dumps(message))
+            if store:
+                logger.debug(
+                    f"Event updated [{message['topic']}]: {message['description']}",
+                    event_id=message["id"],
+                    nodb=True,
+                )
             return True
         return False
 

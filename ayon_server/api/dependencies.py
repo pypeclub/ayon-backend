@@ -1,28 +1,20 @@
 """Request dependencies."""
 
 import re
-import time
 from typing import Annotated, get_args
 
 from fastapi import Cookie, Depends, Header, Path, Query, Request
 
 from ayon_server.addons import AddonLibrary, BaseServerAddon
-from ayon_server.auth.session import Session
-from ayon_server.auth.utils import hash_password
 from ayon_server.entities import UserEntity
 from ayon_server.exceptions import (
     BadRequestException,
-    ForbiddenException,
     NotFoundException,
     UnauthorizedException,
     UnsupportedMediaException,
 )
 from ayon_server.helpers.project_list import build_project_list, get_project_list
-from ayon_server.lib.postgres import Postgres
-from ayon_server.lib.redis import Redis
-from ayon_server.logging import logger
 from ayon_server.types import (
-    API_KEY_REGEX,
     NAME_REGEX,
     PROJECT_NAME_REGEX,
     USER_NAME_REGEX,
@@ -33,6 +25,13 @@ from ayon_server.utils import (
     parse_access_token,
     parse_api_key,
 )
+
+
+def dep_no_traces():
+    return None
+
+
+NoTraces = Depends(dep_no_traces)
 
 
 def dep_current_addon(request: Request) -> BaseServerAddon:
@@ -107,59 +106,7 @@ async def dep_thumbnail_content_type(content_type: str = Header(None)) -> str:
 ThumbnailContentType = Annotated[str, Depends(dep_thumbnail_content_type)]
 
 
-async def user_from_api_key(api_key: str) -> UserEntity:
-    """Return a user associated with the given API key.
-
-    Hashed ApiKey may be stored in the database in two ways:
-
-    1. As a string in the `apiKey` field. Original method used
-       by services
-
-    2. As an array of objects in the `apiKeys` field. Each object
-       has the following fields:
-        - id: identifier that allows invalidating the key
-        - key: hashed api key
-        - label: a human-readable label
-        - preview: a preview of the key
-        - created: timestamp when the key was created
-        - expires(optional): timestamp when the key expires
-
-       In this case, the key is stored in the `key` field,
-       is the one we are looking for. We also need to check
-       if the key is not expired.
-    """
-    hashed_key = hash_password(api_key)
-    query = """
-        SELECT * FROM users
-        WHERE data->>'apiKey' = $1
-        OR EXISTS (
-            SELECT 1 FROM jsonb_array_elements(data->'apiKeys') AS ak
-            WHERE ak->>'key' = $1
-        )
-    """
-    if not (result := await Postgres.fetch(query, hashed_key)):
-        raise UnauthorizedException("Invalid API key")
-    user = UserEntity.from_record(result[0])
-    if user.data.get("apiKey") == hashed_key:
-        return user
-    for key_data in user.data.get("apiKeys", []):
-        if key_data.get("key") != hashed_key:
-            continue
-        if key_data.get("expires") and key_data["expires"] < time.time():
-            raise UnauthorizedException("API key has expired")
-        return user
-    raise UnauthorizedException("Invalid API key. This shouldn't happen")
-
-
-async def dep_current_user(
-    request: Request,
-    x_as_user: str | None = Header(
-        None, regex=USER_NAME_REGEX, include_in_schema=False
-    ),
-    x_api_key: str | None = Header(None, regex=API_KEY_REGEX, include_in_schema=False),
-    access_token: str | None = Depends(dep_access_token),
-    api_key: str | None = Depends(dep_api_key),
-) -> UserEntity:
+async def dep_current_user(request: Request) -> UserEntity:
     """Return the currently logged-in user.
 
     Use `dep_access_token` to ensure a valid access token is provided
@@ -172,63 +119,18 @@ async def dep_current_user(
     or the user is not permitted to access the endpoint.
     """
 
-    if api_key := x_api_key or api_key:
-        if (session_data := await Session.check(api_key, request)) is None:
-            user = await user_from_api_key(api_key)
-            session_data = await Session.create(user, request, token=api_key)
-        session_data.is_api_key = True
-
-    elif access_token is None:
-        raise UnauthorizedException("Access token is missing")
-    else:
-        session_data = await Session.check(access_token, request)
-
-    if not session_data:
-        raise UnauthorizedException("Invalid access token")
-    await Redis.incr("user-requests", session_data.user.name)
-    user = UserEntity.from_record(session_data.user.dict())
-    user.add_session(session_data)
-    logger.trace(f"Authenticated as {user.name}", user=user.name)
-
-    if x_as_user is not None and user.is_service:
-        # sudo :)
-        user = await UserEntity.load(x_as_user)
-
-    endpoint = request.scope["endpoint"].__name__
-    project_name = request.path_params.get("project_name", "_")
-    if not user.is_manager:
-        # check if the user has access to the endpoint
-        # we allow _ as a project name to check global permissions
-        # (namely /api/accessGroups/_)
-        # but it is up to the endpoint to handle it
-        if project_name != "_":
-            perms = user.permissions(project_name)
-            if (perms is not None) and perms.endpoints.enabled:
-                if endpoint not in perms.endpoints.endpoints:
-                    raise ForbiddenException(f"{endpoint} is not accessible")
+    user = request.state.user
+    if not user:
+        raise UnauthorizedException(request.state.unauthorized_reason or "Unauthorized")
     return user
 
 
 CurrentUser = Annotated[UserEntity, Depends(dep_current_user)]
 
 
-async def dep_current_user_optional(
-    request: Request,
-    access_token: AccessToken,
-    api_key: ApiKey,
-    x_as_user: str | None = Header(
-        None, regex=USER_NAME_REGEX, include_in_schema=False
-    ),
-    x_api_key: str | None = Header(None, regex=API_KEY_REGEX, include_in_schema=False),
-) -> UserEntity | None:
+async def dep_current_user_optional(request: Request) -> UserEntity | None:
     try:
-        user = await dep_current_user(
-            request=request,
-            x_as_user=x_as_user,
-            x_api_key=x_api_key,
-            access_token=access_token,
-            api_key=api_key,
-        )
+        user = await dep_current_user(request=request)
     except UnauthorizedException:
         return None
     return user
@@ -270,6 +172,7 @@ NewProjectName = Annotated[str, Depends(dep_new_project_name)]
 
 
 async def dep_project_name(
+    current_user: Annotated[UserEntity, Depends(dep_current_user)],
     project_name: str = Path(
         ...,
         title="Project name",
@@ -282,6 +185,8 @@ async def dep_project_name(
     If the name is specified using wrong letter case, it is corrected
     to match the database record.
     """
+
+    current_user.check_project_access(project_name)
 
     project_list = await get_project_list()
 
@@ -303,11 +208,13 @@ ProjectName = Annotated[str, Depends(dep_project_name)]
 
 
 async def dep_project_name_or_underscore(
+    current_user: Annotated[UserEntity, Depends(dep_current_user)],
     project_name: str = Path(..., title="Project name"),
 ) -> str:
     if project_name == "_":
+        # TODO: check if user has access to all projects?
         return project_name
-    return await dep_project_name(project_name)
+    return await dep_project_name(current_user, project_name)
 
 
 ProjectNameOrUnderscore = Annotated[str, Depends(dep_project_name_or_underscore)]

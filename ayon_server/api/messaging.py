@@ -215,3 +215,6 @@ class Messaging(BackgroundWorker):
                 await asyncio.sleep(0.5)
 
         logger.warning("Stopping redis2ws")
+
+
+messaging = Messaging()

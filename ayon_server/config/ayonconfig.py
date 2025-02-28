@@ -221,6 +221,11 @@ class AyonConfig(BaseModel):
         description="Log level for the console output",
     )
 
+    log_context: bool = Field(
+        default=False,
+        description="Print log context along with the message",
+    )
+
     log_level_db: LogLevel = Field(
         default="INFO",
         description="Log level stored in the event stream",

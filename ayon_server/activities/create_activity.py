@@ -27,6 +27,7 @@ from ayon_server.entities.core import ProjectLevelEntity
 from ayon_server.events.eventstream import EventStream
 from ayon_server.exceptions import BadRequestException, NotFoundException
 from ayon_server.lib.postgres import Postgres
+from ayon_server.logging import logger
 from ayon_server.utils import create_uuid
 
 
@@ -252,55 +253,56 @@ async def create_activity(
         "references": summary_references,
     }
 
-    await EventStream.dispatch(
-        "activity.created",
-        project=project_name,
-        description="",
-        summary=summary,
-        store=False,
-        user=user_name,
-        sender=sender,
-        sender_type=sender_type,
-    )
-
-    # Send inbox notifications
-
-    notify_important: list[str] = []
-    notify_normal: list[str] = []
-    for ref in references:
-        if ref.entity_type != "user":
-            continue
-        assert ref.entity_name is not None, "This should have been checked before"
-        if ref.reference_type == "author":
-            continue
-        if (
-            ref.reference_type in ["mention", "watching"]
-            and activity_type != "status.change"
-        ):
-            notify_important.append(ref.entity_name)
-        elif ref.entity_name not in notify_important:
-            notify_normal.append(ref.entity_name)
-
-    notify_description = body.split("\n")[0]
-    if notify_important:
+    with logger.contextualize(activity_id=activity_id, activity_type=activity_type):
         await EventStream.dispatch(
-            "inbox.message",
+            "activity.created",
             project=project_name,
-            description=notify_description,
-            summary={"isImportant": True},
-            recipients=notify_important,
+            description=f"Created {activity_type} activity",
+            summary=summary,
             store=False,
             user=user_name,
+            sender=sender,
+            sender_type=sender_type,
         )
-    if notify_normal:
-        await EventStream.dispatch(
-            "inbox.message",
-            project=project_name,
-            description=notify_description,
-            summary={"isImportant": False},
-            recipients=notify_normal,
-            store=False,
-            user=user_name,
-        )
+
+        # Send inbox notifications
+
+        notify_important: list[str] = []
+        notify_normal: list[str] = []
+        for ref in references:
+            if ref.entity_type != "user":
+                continue
+            assert ref.entity_name is not None, "This should have been checked before"
+            if ref.reference_type == "author":
+                continue
+            if (
+                ref.reference_type in ["mention", "watching"]
+                and activity_type != "status.change"
+            ):
+                notify_important.append(ref.entity_name)
+            elif ref.entity_name not in notify_important:
+                notify_normal.append(ref.entity_name)
+
+        notify_description = body.split("\n")[0]
+        if notify_important:
+            await EventStream.dispatch(
+                "inbox.message",
+                project=project_name,
+                description=notify_description,
+                summary={"isImportant": True},
+                recipients=notify_important,
+                store=False,
+                user=user_name,
+            )
+        if notify_normal:
+            await EventStream.dispatch(
+                "inbox.message",
+                project=project_name,
+                description=notify_description,
+                summary={"isImportant": False},
+                recipients=notify_normal,
+                store=False,
+                user=user_name,
+            )
 
     return activity_id

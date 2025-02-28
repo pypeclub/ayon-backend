@@ -7,10 +7,10 @@
 
 from typing import Annotated, Any
 
-from fastapi import Cookie, Depends, Header, Path, Query, Request
+from fastapi import Cookie, Header, Path, Query, Request
 
 from ayon_server.logging import logger
-from ayon_server.types import API_KEY_REGEX, PROJECT_NAME_REGEX, USER_NAME_REGEX
+from ayon_server.types import PROJECT_NAME_REGEX
 from ayon_server.utils import EntityID, parse_access_token, parse_api_key
 
 
@@ -52,19 +52,11 @@ async def dep_api_key(
 
 async def dep_current_user(
     request: Request,
-    x_as_user: str | None = Header(
-        None,
-        regex=USER_NAME_REGEX,
-        include_in_schema=False,
-    ),
-    x_api_key: str | None = Header(None, regex=API_KEY_REGEX, include_in_schema=False),
-    access_token: str | None = Depends(dep_access_token),
-    api_key: str | None = Depends(dep_api_key),
 ) -> Any:
     from .dependencies import dep_current_user
 
     logger.warning("Using deprecated dep_current_user")
-    return await dep_current_user(request, x_as_user, x_api_key, access_token, api_key)
+    return await dep_current_user(request)
 
 
 async def dep_project_name(

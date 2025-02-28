@@ -39,7 +39,7 @@ def get_nickname(text: str, length: int = 1):
 def indent(text: str, length: int = 4) -> str:
     """Indent a multi-line text."""
     return (
-        "\n".join([f"{length*' '}{s.rstrip()}" for s in text.split("\n")]) + "\n"
+        "\n".join([f"{length*' '}{s.rstrip()}" for s in text.split("\n")])
         if text.endswith("\n")
         else ""
     )

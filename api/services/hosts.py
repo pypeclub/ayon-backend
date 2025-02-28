@@ -2,7 +2,7 @@ from datetime import datetime
 
 from fastapi import Depends
 
-from ayon_server.api.dependencies import dep_current_user
+from ayon_server.api.dependencies import NoTraces, dep_current_user
 from ayon_server.entities import UserEntity
 from ayon_server.exceptions import ForbiddenException
 from ayon_server.lib.postgres import Postgres
@@ -54,7 +54,11 @@ class HeartbeatResponseModel(OPModel):
     )
 
 
-@router.get("/hosts", response_model=HostListResponseModel, tags=["Services"])
+@router.get(
+    "/hosts",
+    response_model=HostListResponseModel,
+    tags=["Services"],
+)
 async def list_hosts(user: UserEntity = Depends(dep_current_user)):
     """Return a list of all hosts.
 
@@ -70,7 +74,10 @@ async def list_hosts(user: UserEntity = Depends(dep_current_user)):
 
 
 @router.post(
-    "/hosts/heartbeat", response_model=HeartbeatResponseModel, tags=["Services"]
+    "/hosts/heartbeat",
+    response_model=HeartbeatResponseModel,
+    tags=["Services"],
+    dependencies=[NoTraces],
 )
 async def host_heartbeat(
     payload: HeartbeatRequestModel,

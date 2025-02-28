@@ -66,7 +66,7 @@ async def rebuild_hierarchy_cache(
 
     await Redis.set("project.folders", project_name, json_dumps(result), 3600)
     elapsed_time = time.monotonic() - start_time
-    logger.debug(
+    logger.trace(
         f"Rebuilt hierarchy cache for {project_name} "
         f"with {len(result)} folders "
         f"in {elapsed_time:.2f} s"
